@@ -196,35 +196,45 @@ const App = () => {
     const styles = quadrantColors[num];
     return (
       <div 
-        className={`flex flex-col h-full rounded-2xl border-2 p-2 ${styles.bg} ${styles.border} shadow-sm overflow-hidden relative transition-colors`}
+        className={`flex flex-col h-full rounded-2xl border-2 p-2.5 ${styles.bg} ${styles.border} shadow-sm overflow-hidden relative transition-colors`}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop(e, num)}
       >
-        <div className="flex items-center gap-2 mb-2 shrink-0 px-1">
-          <div className={`p-1 rounded-lg bg-white bg-opacity-60 shadow-sm`}>
-            <Icon size={12} className={styles.icon} />
+        <div className="flex items-start gap-2 mb-3 shrink-0 px-1">
+          <div className={`p-1.5 rounded-lg bg-white bg-opacity-80 shadow-sm shrink-0 mt-0.5`}>
+            <Icon size={14} className={styles.icon} />
           </div>
-          <h3 className="font-bold text-slate-700 text-[10px] sm:text-xs truncate">{num}. {title}</h3>
-          <span className="ml-auto bg-white bg-opacity-60 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold">{quadrantTasks.length}</span>
+          <div className="flex flex-col min-w-0">
+            <h3 className="font-black text-slate-800 text-[11px] sm:text-[13px] leading-tight whitespace-normal break-keep">
+              {num}. {title}
+            </h3>
+          </div>
+          <span className="ml-auto bg-white bg-opacity-80 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-black shadow-sm shrink-0">
+            {quadrantTasks.length}
+          </span>
         </div>
         <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
           {quadrantTasks.map(task => (
             <div 
               key={task.id} draggable onDragStart={(e) => onDragStart(e, task.id)}
-              className={`group flex items-start gap-1.5 p-2 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-200 transition-all ${task.date < selectedDate ? 'ring-1 ring-amber-200' : ''}`}
+              className={`group flex items-start gap-2 p-2.5 rounded-xl border border-white/50 bg-white/90 backdrop-blur-sm shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 transition-all ${task.date < selectedDate ? 'ring-1 ring-amber-300' : ''}`}
             >
               <button onClick={() => toggleComplete(task)} className="mt-0.5 shrink-0">
-                {task.completed ? <CheckCircle2 size={14} className="text-green-500" /> : <Circle size={14} className="text-slate-200" />}
+                {task.completed ? <CheckCircle2 size={16} className="text-green-500" /> : <Circle size={16} className="text-slate-300" />}
               </button>
               <div className="flex-1 min-w-0">
-                <p className={`text-[11px] leading-tight break-words ${task.completed ? 'text-slate-300 line-through' : 'text-slate-700 font-medium'}`}>{task.text}</p>
-                <button onClick={() => analyzeTaskWithAI(task)} className="text-[8px] text-indigo-500 hover:underline mt-1 font-bold">✨ AI 가이드</button>
+                <p className={`text-[12px] sm:text-[13px] leading-snug break-words ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700 font-semibold'}`}>
+                  {task.text}
+                </p>
+                <button onClick={() => analyzeTaskWithAI(task)} className="text-[9px] text-indigo-600 hover:underline mt-1.5 font-black flex items-center gap-1">
+                  <Sparkles size={10} /> AI 가이드
+                </button>
               </div>
-              <button onClick={() => deleteTask(task.id)} className="text-slate-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+              <button onClick={() => deleteTask(task.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
             </div>
           ))}
           {quadrantTasks.length === 0 && (
-            <div className="h-full flex items-center justify-center text-slate-300 text-[9px] italic py-4">기록 없음</div>
+            <div className="h-full flex items-center justify-center text-slate-400 text-[10px] italic py-6">기록 없음</div>
           )}
         </div>
       </div>
@@ -232,30 +242,32 @@ const App = () => {
   };
 
   return (
-    <div className="h-screen bg-white font-sans text-slate-900 flex flex-col overflow-hidden relative">
+    <div className="h-screen bg-slate-50 font-sans text-slate-900 flex flex-col overflow-hidden relative">
       {/* AI Modal */}
       {showAiModal && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[80vh]">
-            <div className="bg-indigo-600 px-5 py-4 flex justify-between items-center text-white shrink-0">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
+            <div className="bg-indigo-600 px-5 py-5 flex justify-between items-center text-white shrink-0">
               <div className="flex items-center gap-2">
-                <Sparkles size={18} />
-                <h2 className="font-bold text-sm">AI 가이드</h2>
+                <Sparkles size={20} />
+                <h2 className="font-black text-sm tracking-tight">AI 생산성 가이드</h2>
               </div>
-              <button onClick={() => setShowAiModal(false)} className="hover:bg-white/20 p-1 rounded-full"><X size={18} /></button>
+              <button onClick={() => setShowAiModal(false)} className="hover:bg-white/20 p-1.5 rounded-full transition-colors"><X size={20} /></button>
             </div>
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50">
               {aiLoading ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-3">
-                  <Loader2 size={32} className="text-indigo-600 animate-spin" />
-                  <p className="text-xs text-slate-500">분석 중...</p>
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <Loader2 size={36} className="text-indigo-600 animate-spin" />
+                  <p className="text-xs font-bold text-slate-500">AI가 분석하고 있습니다...</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap break-words italic">
-                    {aiResponse}
-                  </p>
-                  <button onClick={() => setShowAiModal(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold">확인</button>
+                <div className="space-y-5">
+                  <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                    <p className="text-slate-700 text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap break-words italic font-medium">
+                      {aiResponse}
+                    </p>
+                  </div>
+                  <button onClick={() => setShowAiModal(false)} className="w-full py-3.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-100 active:scale-[0.98] transition-transform">확인했습니다</button>
                 </div>
               )}
             </div>
@@ -263,21 +275,25 @@ const App = () => {
         </div>
       )}
 
-      <header className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0 z-10">
+      <header className="bg-white border-b border-slate-200 px-4 py-4 flex items-center justify-between shrink-0 z-10 shadow-sm">
         <div className="flex items-center gap-2">
-          <Calendar className="text-indigo-500" size={18} />
-          <div className="flex items-center gap-1">
-            <button onClick={() => changeDate(-1)} className="p-1"><ChevronLeft size={16}/></button>
-            <span className="font-bold text-xs w-20 text-center">{selectedDate === new Date().toISOString().split('T')[0] ? '오늘' : selectedDate}</span>
-            <button onClick={() => changeDate(1)} className="p-1"><ChevronRight size={16}/></button>
+          <Calendar className="text-indigo-600" size={20} />
+          <div className="flex items-center bg-slate-100 rounded-full px-1 py-0.5">
+            <button onClick={() => changeDate(-1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronLeft size={18}/></button>
+            <span className="font-black text-[11px] sm:text-xs w-20 text-center text-slate-700">
+              {selectedDate === new Date().toISOString().split('T')[0] ? '오늘' : selectedDate}
+            </span>
+            <button onClick={() => changeDate(1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronRight size={18}/></button>
           </div>
         </div>
-        <h1 className="font-bold text-sm text-slate-700">아우젠하워 매트릭스</h1>
-        <button onClick={getDailyCoaching} className="text-[10px] font-bold text-white bg-indigo-500 px-4 py-1.5 rounded-full shadow-lg shadow-indigo-100">✨ 코칭</button>
+        <h1 className="font-black text-sm sm:text-base text-slate-800 tracking-tighter">아우젠하워 매트릭스</h1>
+        <button onClick={getDailyCoaching} className="text-[10px] sm:text-xs font-black text-white bg-indigo-600 px-4 py-2 rounded-full shadow-lg shadow-indigo-200 active:scale-95 transition-transform">
+          ✨ 코칭
+        </button>
       </header>
 
       <main className="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
-        <section className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 shrink-0">
+        <section className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm shrink-0">
           <div className="space-y-3">
             <div className="relative">
               <input
@@ -285,7 +301,7 @@ const App = () => {
                 value={taskInput}
                 onChange={(e) => setTaskInput(e.target.value)}
                 placeholder="어떤 일을 기록할까요?"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[12px] sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-inner"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -293,7 +309,7 @@ const App = () => {
                 <button
                   key={num}
                   onClick={() => addTaskToQuadrant(num)}
-                  className={`py-2.5 rounded-xl text-[10px] font-black transition-all border-2 active:scale-95 shadow-sm ${quadrantColors[num].btn}`}
+                  className={`py-3 rounded-xl text-[10px] sm:text-[11px] font-black transition-all border-2 active:scale-95 shadow-sm leading-tight ${quadrantColors[num].btn}`}
                 >
                   {num}번 저장
                 </button>
@@ -302,16 +318,18 @@ const App = () => {
           </div>
         </section>
 
-        <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-2 min-h-0 pb-2">
-          <Quadrant num={1} title="중요/긴급" urgent={true} important={true} icon={AlertCircle} />
-          <Quadrant num={2} title="중요/비긴급" urgent={false} important={true} icon={Clock} />
-          <Quadrant num={3} title="긴급/비중요" urgent={true} important={false} icon={Users} />
-          <Quadrant num={4} title="여유/보류" urgent={false} important={false} icon={Trash} />
+        <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-2.5 min-h-0 pb-2">
+          <Quadrant num={1} title="중요하고 긴급한 일" urgent={true} important={true} icon={AlertCircle} />
+          <Quadrant num={2} title="중요하지만 긴급하지 않은 일" urgent={false} important={true} icon={Clock} />
+          <Quadrant num={3} title="긴급하지만 중요하지 않은 일" urgent={true} important={false} icon={Users} />
+          <Quadrant num={4} title="중요하지도 긴급하지도 않은 일" urgent={false} important={false} icon={Trash} />
         </div>
       </main>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
       `}} />
     </div>
