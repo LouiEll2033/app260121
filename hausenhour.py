@@ -24,27 +24,32 @@ with st.sidebar:
 if st.session_state.view_mode == "Mobile":
     st.markdown("""
         <style>
-        /* 기본 레이아웃 강제 고정 */
+        /* 기본 레이아웃 강제 고정 및 브라우저 기본 여백 제거 */
         * { box-sizing: border-box !important; }
         [data-testid="stHeader"] { visibility: hidden; height: 0; }
         footer { visibility: hidden; }
-        .main { background-color: #ffffff; overflow-x: hidden !important; }
+        .main { background-color: #ffffff; overflow: hidden !important; width: 100vw; height: 100vh; }
         
-        /* 모바일 전체 컨테이너: 가로 스크롤 절대 금지 */
+        /* 모바일 전체 컨테이너: 가로/세로 스크롤 절대 금지 */
         .block-container { 
-            padding-top: 0.5rem !important; 
+            padding-top: 0.3rem !important; 
             padding-bottom: 0 !important; 
             padding-left: 0.2rem !important; 
             padding-right: 0.2rem !important;
             max-width: 100vw !important;
-            overflow-x: hidden !important;
+            height: 100vh !important;
+            overflow: hidden !important;
         }
         
-        /* 2열 강제 고정 및 간격 최적화 */
+        /* Streamlit 내부 요소 간격(Gap) 제거 */
+        [data-testid="stVerticalBlockBorderWrapper"] > div > div { gap: 0rem !important; }
+        [data-testid="stVerticalBlock"] { gap: 0rem !important; }
+        
+        /* 2열 강제 고정 */
         [data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
-            flex-wrap: nowrap !important; /* 줄바꿈 절대 방지 */
+            flex-wrap: nowrap !important;
             width: 100% !important;
             gap: 4px !important;
             margin: 0 !important;
@@ -60,53 +65,56 @@ if st.session_state.view_mode == "Mobile":
             padding: 0 !important;
         }
 
-        /* 사분면 헤더 디자인 */
+        /* 사분면 헤더 */
         .q-header {
-            font-weight: 800; padding: 5px 0; border-radius: 8px 8px 0 0;
+            font-weight: 800; padding: 4px 0; border-radius: 6px 6px 0 0;
             font-size: 0.7rem; text-align: center; color: #333;
-            border: 1px solid rgba(0,0,0,0.05); line-height: 1.1;
+            border: 1px solid rgba(0,0,0,0.05); line-height: 1;
+            margin-bottom: 0px !important;
         }
 
-        /* 사분면 내용 영역: 한 화면에 맞게 높이 계산 (Viewport Height) */
+        /* 사분면 내용 영역: 높이를 낮추어 한 화면에 박제 (32vh) */
         .quadrant-container {
-            border: 1px solid #f1f5f9; border-radius: 0 0 8px 8px;
+            border: 1px solid #f1f5f9; border-radius: 0 0 6px 6px;
             padding: 4px; background-color: #fafafa;
-            height: 38vh; /* 화면의 38%씩 2개 층 배치 */
+            height: 32vh; /* 상하 2단 합쳐서 64vh + 기타 요소 약 30vh = 94vh로 한 화면 유도 */
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* 가독성 상향 (텍스트 크기 최적화) */
+        /* 가독성 상향 */
         .stMarkdown div p { 
             font-size: 0.75rem !important; 
-            line-height: 1.25 !important; 
+            line-height: 1.2 !important; 
             word-break: break-all;
             color: #1e293b;
             margin: 0 !important;
         }
 
-        /* 체크박스 및 위젯 압축 */
-        .stVerticalBlock { gap: 0rem !important; }
+        /* 체크박스 압축 */
         div[data-testid="stCheckbox"] { 
-            margin-top: -10px !important; 
-            margin-bottom: -12px !important; 
-            transform: scale(0.85); 
+            margin-top: -12px !important; 
+            margin-bottom: -14px !important; 
+            transform: scale(0.8); 
         }
         div[data-testid="stCheckbox"] label { display: none !important; }
 
         /* 버튼 콤팩트화 */
         .stButton>button { 
-            font-size: 0.6rem; height: 24px; min-height: 24px; 
-            padding: 0 !important; border-radius: 6px; 
+            font-size: 0.55rem; height: 20px; min-height: 20px; 
+            padding: 0 !important; border-radius: 4px; 
         }
         div[data-testid="stPopover"] > button { 
-            height: 24px !important; font-size: 0.6rem !important; 
-            padding: 0 !important; border-radius: 6px !important; 
+            height: 20px !important; font-size: 0.55rem !important; 
+            padding: 0 !important; border-radius: 4px !important; 
         }
+        
+        /* 날짜 입력창 크기 조절 */
+        div[data-testid="stDateInput"] { transform: scale(0.85); transform-origin: top right; }
         </style>
         """, unsafe_allow_html=True)
 else:
-    # PC 버전: 여백과 크기를 확장하여 가독성 확보
+    # PC 버전
     st.markdown("""
         <style>
         .main { background-color: #f1f5f9; }
@@ -147,7 +155,7 @@ def add_task(text, q_num, date):
 # --- 상단 헤더 ---
 h_col1, h_col2 = st.columns([1, 1])
 with h_col1:
-    st.markdown(f"### 📋 하우젠 매트릭스")
+    st.markdown(f"### 📋 하우젠")
 with h_col2:
     selected_date = st.date_input("날짜", datetime.now(), label_visibility="collapsed")
 
@@ -171,7 +179,7 @@ for i, q in enumerate(quadrants):
     with grid[i]:
         st.markdown(f'<div class="q-header" style="background-color: {q["color"]};">{q["icon"]} {q["title"]}</div>', unsafe_allow_html=True)
         
-        with st.popover("➕ 추가", use_container_width=True):
+        with st.popover("➕", use_container_width=True):
             in_val = st.text_input("할 일", key=f"in_{q['num']}", placeholder="내용 입력 후 엔터", label_visibility="collapsed")
             if st.button("저장", key=f"btn_{q['num']}", use_container_width=True):
                 add_task(in_val, q['num'], selected_date)
@@ -181,8 +189,8 @@ for i, q in enumerate(quadrants):
         q_tasks = [t for t in visible_tasks if t['quadrant'] == q['num']]
         
         for task in q_tasks:
-            # 모바일과 PC 비율 미세 조정
-            ratio = [0.15, 0.7, 0.15] if st.session_state.view_mode == "PC" else [0.2, 0.65, 0.15]
+            # 비율 미세 조정
+            ratio = [0.15, 0.7, 0.15] if st.session_state.view_mode == "PC" else [0.25, 0.6, 0.15]
             t_col1, t_col2, t_col3 = st.columns(ratio)
             
             with t_col1:
@@ -197,7 +205,7 @@ for i, q in enumerate(quadrants):
                     txt = f"<span style='text-decoration: line-through; color: #94a3b8;'>{txt}</span>"
                 if task['date'] < str(selected_date): 
                     txt = f"⏳ {txt}"
-                st.markdown(f"<div style='padding-top: 3px;'>{txt}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='padding-top: 1px;'>{txt}</div>", unsafe_allow_html=True)
             
             with t_col3:
                 if st.button("×", key=f"del_{task['id']}", help="삭제"):
@@ -205,9 +213,9 @@ for i, q in enumerate(quadrants):
                     st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-# 푸터
+# 푸터 (모바일에서는 생략하거나 아주 작게)
 if st.session_state.view_mode == "PC":
     st.divider()
     st.caption("Eisenhower Matrix - PC Optimized View")
 else:
-    st.caption(f"Ver: {st.session_state.view_mode} | {selected_date}")
+    st.markdown("<div style='font-size:8px; color:#ccc; text-align:center;'>Focus Matrix 2x2 Fixed</div>", unsafe_allow_html=True)
