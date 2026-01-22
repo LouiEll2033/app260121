@@ -7,15 +7,14 @@ import {
 } from 'lucide-react';
 
 const App = () => {
-  // 브라우저 보안 정책(iframe 등)으로 인해 localStorage 접근이 막힐 경우를 대비한 안전한 가져오기
+  // 브라우저 보안 정책으로 인해 localStorage 접근이 막힐 경우를 대비한 안전한 가져오기
   const getStoredTasks = () => {
     try {
-      const saved = localStorage.getItem('eisenhower-tasks-pro');
+      const saved = localStorage.getItem('eisenhower-tasks-pro-v2');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn("Storage access is restricted:", e);
     }
-    // 기본 데이터
     return [
       { id: 1, text: '중요하고 긴급한 업무 (Do First)', quadrant: 1, completed: false, createdAt: Date.now() },
       { id: 2, text: '중요하지만 긴급하지 않은 계획 (Schedule)', quadrant: 2, completed: false, createdAt: Date.now() },
@@ -34,9 +33,9 @@ const App = () => {
   // 안전하게 데이터 저장하기
   useEffect(() => {
     try {
-      localStorage.setItem('eisenhower-tasks-pro', JSON.stringify(tasks));
+      localStorage.setItem('eisenhower-tasks-pro-v2', JSON.stringify(tasks));
     } catch (e) {
-      // 저장 실패 시 무시 (사용자 환경 문제)
+      // 저장 실패 시 무시
     }
   }, [tasks]);
 
@@ -145,9 +144,9 @@ const App = () => {
   }, [tasks]);
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 font-sans pb-24">
+    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans pb-24">
       {/* Header */}
-      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm">
+      <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -157,16 +156,16 @@ const App = () => {
               <h1 className="text-xl font-black text-slate-800 leading-none">Eisenhower <span className="text-indigo-600">Pro</span></h1>
             </div>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-2xl">
+          <div className="flex bg-slate-100 p-1 rounded-xl">
             <button 
               onClick={() => setActiveTab('matrix')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'matrix' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-500'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'matrix' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
             >
               매트릭스
             </button>
             <button 
               onClick={() => setActiveTab('list')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-500'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500'}`}
             >
               리스트
             </button>
@@ -177,7 +176,7 @@ const App = () => {
       <main className="max-w-7xl mx-auto px-6 pt-10">
         {/* Input */}
         <div className="max-w-3xl mx-auto mb-12">
-          <form onSubmit={addTask} className="flex gap-4 bg-white p-2 pl-6 rounded-3xl border-2 border-slate-200 shadow-xl focus-within:border-indigo-500 transition-all">
+          <form onSubmit={addTask} className="flex gap-4 bg-white p-2 pl-6 rounded-2xl border-2 border-slate-200 shadow-lg focus-within:border-indigo-500 transition-all">
             <input
               type="text"
               value={newTask}
@@ -188,14 +187,14 @@ const App = () => {
             <select 
               value={selectedQuadrant}
               onChange={(e) => setSelectedQuadrant(Number(e.target.value))}
-              className="hidden sm:block bg-slate-50 text-xs font-black outline-none cursor-pointer text-indigo-600 px-3 rounded-xl"
+              className="hidden sm:block bg-slate-50 text-xs font-black outline-none cursor-pointer text-indigo-600 px-3 rounded-lg"
             >
               {quadrants.map(q => <option key={q.id} value={q.id}>Q{q.id} - {q.label}</option>)}
             </select>
             <button 
               type="submit"
               disabled={!newTask.trim()}
-              className="bg-indigo-600 text-white p-3 rounded-2xl hover:bg-indigo-700 disabled:opacity-30 shadow-lg"
+              className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 shadow-md"
             >
               <Plus size={24} />
             </button>
@@ -208,7 +207,7 @@ const App = () => {
               <div key={q.id} className={`flex flex-col bg-white rounded-3xl border-2 ${q.borderColor} overflow-hidden shadow-sm`}>
                 <div className={`p-6 flex items-center justify-between ${q.bgColor}`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center ${q.textColor}`}>
+                    <div className={`w-12 h-12 rounded-xl bg-white shadow-md flex items-center justify-center ${q.textColor}`}>
                       {q.icon}
                     </div>
                     <div>
@@ -288,7 +287,7 @@ const TaskItem = ({
   const isEditing = editingId === task.id;
 
   return (
-    <div className={`group flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${task.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-50 shadow-sm hover:border-indigo-100'}`}>
+    <div className={`group flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${task.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-50 shadow-sm hover:border-indigo-100'}`}>
       <button onClick={() => toggleTask(task.id)} className={`flex-shrink-0 transition-transform hover:scale-110 ${task.completed ? 'text-indigo-500' : 'text-slate-200'}`}>
         {task.completed ? <CheckCircle2 size={24} fill="currentColor" className="text-white fill-indigo-500" /> : <Circle size={24} />}
       </button>
