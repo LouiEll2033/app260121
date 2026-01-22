@@ -29,7 +29,7 @@ else:
         'muted': '#64748b', 'border': '#e2e8f0', 'accent': '#4f46e5'
     }
 
-# 4. 커스텀 CSS
+# 4. 커스텀 CSS (박스 클릭 및 색상 최적화)
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -60,9 +60,8 @@ st.markdown(f"""
         border-radius: 20px; padding: 0px; margin-bottom: 24px;
         box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
         overflow: hidden;
-        min-height: 350px;
+        min-height: 380px;
         border: 2px solid {c['border']};
-        transition: transform 0.2s ease;
     }}
     
     /* 할 일 아이템 */
@@ -78,26 +77,34 @@ st.markdown(f"""
     #MainMenu, footer, header {{ visibility: hidden; }}
     div[data-testid="stCheckbox"] label {{ display: none !important; }}
     
-    /* 버튼 통합 스타일 */
-    .stButton > button {{
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-    }}
-    
-    /* 카드 헤더 버튼 전용 */
+    /* 카드 헤더 버튼 전용 (클릭 가능한 영역) */
     .header-btn > div > button {{
         border-radius: 0px !important;
         border: none !important;
-        padding: 1.2rem !important;
-        font-size: 1.1rem !important;
+        padding: 1.5rem !important;
+        font-size: 1.2rem !important;
+        font-weight: 800 !important;
         margin: 0 !important;
-        text-align: left !important;
-        display: flex !important;
-        justify-content: flex-start !important;
+        text-align: center !important;
+        width: 100% !important;
+        transition: opacity 0.2s;
+    }}
+    .header-btn > div > button:hover {{ opacity: 0.85; }}
+
+    /* 입력 영역 스타일 */
+    .input-area {{
+        background: {c['bg']};
+        margin: 0 12px 15px 12px;
+        padding: 15px;
+        border-radius: 15px;
+        border: 1px dashed {c['border']};
     }}
 
-    /* 입력창 마진 조정 */
-    .stTextInput {{ padding: 10px 15px; }}
+    /* 버튼 스타일 조정 */
+    .stButton > button {{
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -113,7 +120,7 @@ def add_task(text, quad, date):
     st.session_state.adding_to = None
 
 # 6. 헤더 및 컨트롤
-st.markdown("<div class='header-title'>Matrix Focus</div>", unsafe_allow_html=True)
+st.markdown("<div class='header-title'>Productive Matrix</div>", unsafe_allow_html=True)
 
 ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([3, 1, 1])
 with ctrl_col1:
@@ -132,32 +139,24 @@ with ctrl_col3:
 tasks_today = [t for t in st.session_state.tasks if t['date'] == str(selected_date)]
 total = len(tasks_today)
 done = len([t for t in tasks_today if t['completed']])
-rate = round(done/total*100) if total > 0 else 0
 urgent_count = len([t for t in tasks_today if t['urgent']])
 
 st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-s_col1, s_col2, s_col3, s_col4 = st.columns(4)
+s_col1, s_col2, s_col3 = st.columns(3) # 진행률 제외로 3개 컬럼 사용
 
-with s_col1:
-    st.markdown(f"<div class='stat-container'><div class='stat-val'>{total}</div><div class='stat-lbl'>전체</div></div>", unsafe_allow_html=True)
-with s_col2:
-    st.markdown(f"<div class='stat-container'><div class='stat-val'>{done}</div><div class='stat-lbl'>완료</div></div>", unsafe_allow_html=True)
-with s_col3:
-    st.markdown(f"<div class='stat-container'><div class='stat-val'>{rate}%</div><div class='stat-lbl'>진행률</div></div>", unsafe_allow_html=True)
-with s_col4:
-    # 빨간색 버튼 형태를 제거하고 일반 통계 카드로 복구
-    st.markdown(f"<div class='stat-container'><div class='stat-val'>{urgent_count}</div><div class='stat-lbl'>긴급</div></div>", unsafe_allow_html=True)
+stats_ui = [(total, '전체'), (done, '완료'), (urgent_count, '긴급')]
+for i, (val, lbl) in enumerate(stats_ui):
+    with [s_col1, s_col2, s_col3][i]:
+        st.markdown(f"<div class='stat-container'><div class='stat-val'>{val}</div><div class='stat-lbl'>{lbl}</div></div>", unsafe_allow_html=True)
 
-st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-st.progress(rate / 100)
 st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-# 8. 매트릭스 그리드 (사분면별 색상 유지)
+# 8. 매트릭스 그리드
 quad_data = [
-    {"n": 1, "t": "🔥 DO FIRST", "desc": "중요함 & 긴급함", "bg": "#fee2e2", "fg": "#b91c1c", "border": "#fca5a5"},
-    {"n": 2, "t": "🌱 SCHEDULE", "desc": "중요함 & 여유로움", "bg": "#dcfce7", "fg": "#15803d", "border": "#86efac"},
-    {"n": 3, "t": "📢 DELEGATE", "desc": "사소함 & 긴급함", "bg": "#e0f2fe", "fg": "#0369a1", "border": "#7dd3fc"},
-    {"n": 4, "t": "☕ ELIMINATE", "desc": "사소함 & 여유로움", "bg": "#f1f5f9", "fg": "#334155", "border": "#cbd5e1"}
+    {"n": 1, "t": "🔥 DO FIRST", "desc": "중요함 & 긴급함", "bg": "#fee2e2", "fg": "#b91c1c", "border": "#ef4444"},
+    {"n": 2, "t": "🌱 SCHEDULE", "desc": "중요함 & 여유로움", "bg": "#dcfce7", "fg": "#15803d", "border": "#22c55e"},
+    {"n": 3, "t": "📢 DELEGATE", "desc": "사소함 & 긴급함", "bg": "#e0f2fe", "fg": "#0369a1", "border": "#3b82f6"},
+    {"n": 4, "t": "☕ ELIMINATE", "desc": "사소함 & 여유로움", "bg": "#f1f5f9", "fg": "#334155", "border": "#64748b"}
 ]
 
 if st.session_state.dark_mode:
@@ -167,35 +166,36 @@ if st.session_state.dark_mode:
 
 m_row1_col1, m_row1_col2 = st.columns(2)
 m_row2_col1, m_row2_col2 = st.columns(2)
-cols = [m_row1_col1, m_row1_col2, m_row2_col1, m_row2_col2]
+grid_cols = [m_row1_col1, m_row1_col2, m_row2_col1, m_row2_col2]
 
 visible_tasks = [t for t in st.session_state.tasks if t['date'] == str(selected_date) or (t['date'] < str(selected_date) and not t['completed'])]
 
 for i, q in enumerate(quad_data):
-    with cols[i]:
-        # 개별 카드 테두리 색상 적용을 위한 스타일 주입
+    with grid_cols[i]:
+        # 개별 사분면 색상 스타일 주입
         st.markdown(f"""
             <style>
                 div.q-card-{q['n']} {{ border-color: {q['border']} !important; }}
-                div.q-card-{q['n']} .header-btn button {{ background-color: {q['bg']} !important; color: {q['fg']} !important; border-bottom: 1px solid {q['border']} !important; }}
+                div.q-card-{q['n']} .header-btn button {{ background-color: {q['bg']} !important; color: {q['fg']} !important; border-bottom: 2px solid {q['border']} !important; }}
             </style>
         """, unsafe_allow_html=True)
         
+        # 카드 컨테이너 시작
         st.markdown(f"<div class='q-card q-card-{q['n']}'>", unsafe_allow_html=True)
         
-        # 헤더를 클릭 가능한 버튼으로 구성 (내용 추가 트리거)
+        # 헤더 클릭 영역 (클릭 시 입력창 열림)
         st.markdown("<div class='header-btn'>", unsafe_allow_html=True)
-        if st.button(f"{q['t']} ({q['desc']})", key=f"head{q['n']}", use_container_width=True):
+        if st.button(f"{q['t']}\n({q['desc']})", key=f"head{q['n']}", use_container_width=True):
             st.session_state.adding_to = q['n']
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # 입력 모드
+        # 입력 영역 (해당 사분면 클릭 시 활성화)
         if st.session_state.adding_to == q['n']:
-            st.markdown("<div style='padding: 0 15px;'>", unsafe_allow_html=True)
-            new_txt = st.text_input("새로운 할 일", key=f"in{q['n']}", placeholder="내용 입력 후 저장...", label_visibility="collapsed")
+            st.markdown("<div class='input-area'>", unsafe_allow_html=True)
+            new_txt = st.text_input("New Task", key=f"in{q['n']}", placeholder="할 일을 입력하고 Enter를 누르세요...", label_visibility="collapsed")
             btn_c1, btn_c2 = st.columns(2)
-            if btn_c1.button("✅ 저장", key=f"sv{q['n']}", use_container_width=True, type="primary"):
+            if btn_c1.button("✅ 저장", key=f"sv{q['n']}", use_container_width=True, type="primary") or (new_txt and st.session_state.get(f"in{q['n']}") == ""):
                 add_task(new_txt, q['n'], selected_date)
                 st.rerun()
             if btn_c2.button("❌ 취소", key=f"cc{q['n']}", use_container_width=True):
@@ -207,14 +207,14 @@ for i, q in enumerate(quad_data):
         q_tasks = sorted([t for t in visible_tasks if t['quadrant'] == q['n']], key=lambda x: x['completed'])
         
         if not q_tasks:
-            # 빈 상태일 때도 클릭하여 추가할 수 있도록 버튼 배치
-            st.markdown("<div style='padding: 40px 15px; text-align: center;'>", unsafe_allow_html=True)
-            if st.button("➕ 할 일 추가하기", key=f"empty_add_{q['n']}", use_container_width=True):
+            # 일감이 없을 때 나타나는 추가 유도 버튼
+            st.markdown("<div style='padding: 30px 15px; text-align: center;'>", unsafe_allow_html=True)
+            if st.button(f"➕ {q['t']} 추가", key=f"empty_add_{q['n']}", use_container_width=True):
                 st.session_state.adding_to = q['n']
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div style='padding-top: 15px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='padding-top: 10px;'></div>", unsafe_allow_html=True)
             for task in q_tasks:
                 t_c1, t_c2, t_c3 = st.columns([0.12, 0.76, 0.12])
                 with t_c1:
@@ -231,16 +231,17 @@ for i, q in enumerate(quad_data):
                         st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
                         st.rerun()
         
+        # 카드 컨테이너 종료
         st.markdown("</div>", unsafe_allow_html=True)
 
 # 9. 푸터
 st.markdown("<br>", unsafe_allow_html=True)
-footer_col1, footer_col2 = st.columns([3, 1])
-with footer_col1:
-    st.caption(f"마지막 업데이트: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-with footer_col2:
+footer_c1, footer_c2 = st.columns([3, 1])
+with footer_c1:
+    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+with footer_c2:
     if st.button("⚠️ 데이터 초기화", use_container_width=True):
         st.session_state.tasks = []
         st.rerun()
 
-st.markdown("<div style='text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;'>Focus on what matters. Eisenhower Matrix v8.1</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;'>Maximize your focus with the Matrix. v9.1</div>", unsafe_allow_html=True)
