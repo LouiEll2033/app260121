@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Plus, Trash2, ChevronRight, CheckCircle2, 
   Circle, AlertCircle, Clock, Users, 
   XOctagon, LayoutGrid, ListTodo, Trash,
-  BarChart3, Settings2, Info
+  BarChart3, Settings2, Info, Edit3, Save, X
 } from 'lucide-react';
 
 const App = () => {
@@ -21,6 +21,8 @@ const App = () => {
   const [newTask, setNewTask] = useState('');
   const [selectedQuadrant, setSelectedQuadrant] = useState(1);
   const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' or 'list'
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
   // 데이터 변경 시 로컬 스토리지 저장
   useEffect(() => {
@@ -31,31 +33,31 @@ const App = () => {
     { 
       id: 1, 
       title: 'Do First', 
-      label: '즉시 실행',
-      desc: '긴급 & 중요',
-      color: 'from-red-500 to-orange-500', 
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-700',
-      borderColor: 'border-red-200',
+      label: '중요함 & 긴급함',
+      desc: '즉시 처리해야 할 위기 및 마감 업무',
+      color: 'from-rose-500 to-red-600', 
+      bgColor: 'bg-rose-50',
+      textColor: 'text-rose-700',
+      borderColor: 'border-rose-200',
       icon: <AlertCircle className="w-5 h-5" />
     },
     { 
       id: 2, 
       title: 'Schedule', 
-      label: '계획 수립',
-      desc: '중요하나 긴급하지 않음',
-      color: 'from-blue-500 to-indigo-500', 
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700',
-      borderColor: 'border-blue-200',
+      label: '중요함 & 긴급하지 않음',
+      desc: '장기적 성공을 위한 계획 및 자기계발',
+      color: 'from-emerald-500 to-teal-600', 
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-700',
+      borderColor: 'border-emerald-200',
       icon: <Clock className="w-5 h-5" />
     },
     { 
       id: 3, 
       title: 'Delegate', 
-      label: '권한 위임',
-      desc: '긴급하나 중요하지 않음',
-      color: 'from-amber-500 to-yellow-500', 
+      label: '중요하지 않음 & 긴급함',
+      desc: '다른 사람에게 위임 가능한 방해 요소',
+      color: 'from-amber-400 to-orange-500', 
       bgColor: 'bg-amber-50',
       textColor: 'text-amber-700',
       borderColor: 'border-amber-200',
@@ -64,9 +66,9 @@ const App = () => {
     { 
       id: 4, 
       title: 'Eliminate', 
-      label: '삭제/제거',
-      desc: '긴급하지도 중요하지도 않음',
-      color: 'from-slate-500 to-gray-700', 
+      label: '중요하지 않음 & 긴급하지 않음',
+      desc: '과감히 제거해야 할 시간 낭비 요인',
+      color: 'from-slate-500 to-slate-700', 
       bgColor: 'bg-slate-100',
       textColor: 'text-slate-700',
       borderColor: 'border-slate-200',
@@ -96,6 +98,16 @@ const App = () => {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
+  const startEdit = (task) => {
+    setEditingId(task.id);
+    setEditText(task.text);
+  };
+
+  const saveEdit = () => {
+    setTasks(tasks.map(t => t.id === editingId ? { ...t, text: editText } : t));
+    setEditingId(null);
+  };
+
   const moveTask = (id) => {
     setTasks(tasks.map(t => {
       if (t.id === id) {
@@ -109,7 +121,6 @@ const App = () => {
     setTasks(tasks.filter(t => !t.completed));
   };
 
-  // 통계 데이터 계산
   const stats = useMemo(() => {
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
@@ -118,144 +129,168 @@ const App = () => {
   }, [tasks]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20">
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 font-sans pb-20">
       {/* Top Navbar */}
-      <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-              <LayoutGrid size={18} strokeWidth={2.5} />
+      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+              <LayoutGrid size={22} strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl font-extrabold tracking-tight text-slate-800">Eisenhower <span className="text-indigo-600">Pro</span></h1>
+            <div>
+              <h1 className="text-xl font-black tracking-tight text-slate-800 leading-none">Eisenhower <span className="text-indigo-600">Pro</span></h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Focus on what matters</p>
+            </div>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl">
             <button 
               onClick={() => setActiveTab('matrix')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'matrix' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'matrix' ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              매트릭스
+              <LayoutGrid size={16} /> 매트릭스
             </button>
             <button 
               onClick={() => setActiveTab('list')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-white shadow-md text-indigo-600 scale-105' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              전체 목록
+              <ListTodo size={16} /> 전체 목록
             </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-6 pt-8">
-        {/* Statistics Dashboard */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">전체 할 일</p>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-slate-800">{stats.total}</span>
-              <span className="text-slate-400 text-sm mb-1">건</span>
-            </div>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">진행률</p>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-black text-indigo-600">{stats.percent}%</span>
-              <div className="flex-1 h-2 bg-slate-100 rounded-full mb-2 overflow-hidden">
-                <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${stats.percent}%` }}></div>
+      <main className="max-w-7xl mx-auto px-6 pt-10">
+        {/* Input Form Section */}
+        <div className="max-w-3xl mx-auto mb-12">
+           <form onSubmit={addTask} className="group">
+            <div className="bg-white p-2 pl-6 rounded-3xl border-2 border-slate-200 shadow-xl shadow-slate-200/50 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-50 transition-all flex items-center gap-4">
+              <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="어떤 일을 완료해야 하나요?"
+                className="flex-1 bg-transparent py-4 outline-none text-slate-700 font-bold text-lg placeholder:text-slate-300"
+              />
+              <div className="hidden sm:flex items-center gap-2 bg-slate-50 py-2 px-4 rounded-2xl border border-slate-100">
+                <span className="text-[10px] font-black text-slate-400 uppercase">분류:</span>
+                <select 
+                  value={selectedQuadrant}
+                  onChange={(e) => setSelectedQuadrant(Number(e.target.value))}
+                  className="bg-transparent text-xs font-black outline-none cursor-pointer text-indigo-600"
+                >
+                  {quadrants.map(q => <option key={q.id} value={q.id}>Q{q.id} - {q.label}</option>)}
+                </select>
               </div>
+              <button 
+                type="submit"
+                disabled={!newTask.trim()}
+                className="bg-indigo-600 text-white p-4 rounded-2xl hover:bg-indigo-700 disabled:opacity-30 disabled:hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
+              >
+                <Plus size={24} strokeWidth={3} />
+              </button>
             </div>
-          </div>
-          <div className="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div className="flex gap-4">
-              {quadrants.map((q, i) => (
-                <div key={q.id} className="text-center">
-                  <div className={`w-2 h-8 mx-auto rounded-full mb-1 bg-gradient-to-t ${q.id === 1 ? 'from-red-500' : q.id === 2 ? 'from-blue-500' : q.id === 3 ? 'from-amber-500' : 'from-slate-500'} to-transparent opacity-30`}>
-                    <div className="w-full bg-current rounded-full" style={{ height: `${(stats.quadrantCounts[i] / (stats.total || 1)) * 100}%` }}></div>
+          </form>
+        </div>
+
+        {activeTab === 'matrix' ? (
+          <div className="relative">
+            {/* Axis Labels */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-1 rounded-full border border-slate-200 z-10">
+              긴급도 (Urgency)
+            </div>
+            <div className="absolute top-1/2 -left-8 -translate-y-1/2 -rotate-90 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-1 rounded-full border border-slate-200 z-10 hidden xl:block">
+              중요도 (Importance)
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative">
+              {/* Central Divider Decorations */}
+              <div className="hidden lg:block absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-slate-200 -translate-y-1/2"></div>
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-[#F1F5F9] border-4 border-white rounded-full flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                </div>
+              </div>
+
+              {quadrants.map((q) => (
+                <div key={q.id} className={`flex flex-col bg-white rounded-[2.5rem] border-2 ${q.borderColor} overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group/card`}>
+                  <div className={`p-6 flex items-center justify-between ${q.bgColor}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center ${q.textColor}`}>
+                        {q.icon}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${q.textColor} bg-white border border-current opacity-70`}>QUADRANT {q.id}</span>
+                          <h3 className={`font-black text-lg ${q.textColor}`}>{q.title}</h3>
+                        </div>
+                        <p className="text-slate-500 text-xs font-bold mt-0.5">{q.label}</p>
+                      </div>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                       <span className="text-3xl font-black text-slate-900/5 uppercase">{q.title.split(' ')[0]}</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400">Q{q.id}</span>
+                  
+                  <div className="flex-1 p-6 space-y-4 min-h-[350px] max-h-[500px] overflow-y-auto custom-scrollbar bg-white">
+                    {tasks.filter(t => t.quadrant === q.id).length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center py-20 grayscale opacity-20">
+                        <div className="p-4 rounded-full border-2 border-dashed border-slate-400 mb-4">
+                          {q.icon}
+                        </div>
+                        <p className="text-sm font-black italic">No tasks here yet.</p>
+                      </div>
+                    ) : (
+                      tasks.filter(t => t.quadrant === q.id).map(task => (
+                        <TaskItem 
+                          key={task.id} 
+                          task={task} 
+                          toggleTask={toggleTask} 
+                          deleteTask={deleteTask} 
+                          moveTask={moveTask}
+                          startEdit={startEdit}
+                          editingId={editingId}
+                          editText={editText}
+                          setEditText={setEditText}
+                          saveEdit={saveEdit}
+                          qStyle={q}
+                        />
+                      ))
+                    )}
+                  </div>
+                  
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <p className="text-[10px] font-bold text-slate-400 italic">"{q.desc}"</p>
+                    <span className="text-[10px] font-black text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-200">
+                      {tasks.filter(t => t.quadrant === q.id).length} ITEMS
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
-            <button 
-              onClick={clearCompleted}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-            >
-              <Trash size={16} /> 완료 항목 삭제
-            </button>
-          </div>
-        </section>
-
-        {/* Input Form */}
-        <form onSubmit={addTask} className="mb-10 group">
-          <div className="bg-white p-2 pl-6 rounded-2xl border-2 border-slate-200 shadow-sm focus-within:border-indigo-500 transition-all flex items-center gap-4">
-            <input
-              type="text"
-              value={newTask}
-              onChange={(e) => setNewTask(e.target.value)}
-              placeholder="새로운 작업 내용을 입력하세요..."
-              className="flex-1 bg-transparent py-3 outline-none text-slate-700 font-medium"
-            />
-            <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-4 mr-2">
-              <select 
-                value={selectedQuadrant}
-                onChange={(e) => setSelectedQuadrant(Number(e.target.value))}
-                className="bg-slate-50 text-xs font-bold py-2 px-3 rounded-lg outline-none cursor-pointer text-slate-600"
-              >
-                {quadrants.map(q => <option key={q.id} value={q.id}>Q{q.id} - {q.label}</option>)}
-              </select>
-            </div>
-            <button 
-              type="submit"
-              disabled={!newTask.trim()}
-              className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 disabled:hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
-            >
-              <Plus size={20} strokeWidth={3} />
-            </button>
-          </div>
-        </form>
-
-        {activeTab === 'matrix' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {quadrants.map((q) => (
-              <div key={q.id} className={`flex flex-col bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
-                <div className={`p-5 flex items-center justify-between border-b border-slate-100 ${q.bgColor}`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl bg-white shadow-sm ${q.textColor}`}>
-                      {q.icon}
-                    </div>
-                    <div>
-                      <h3 className={`font-black text-sm uppercase tracking-wider ${q.textColor}`}>{q.title}</h3>
-                      <p className="text-slate-500 text-xs font-medium">{q.desc}</p>
-                    </div>
-                  </div>
-                  <span className="text-2xl font-black opacity-10">{q.id}</span>
-                </div>
-                
-                <div className="flex-1 p-4 space-y-3 min-h-[320px] max-h-[450px] overflow-y-auto">
-                  {tasks.filter(t => t.quadrant === q.id).length === 0 ? (
-                    <div className="h-full flex flex-row items-center justify-center opacity-30 gap-3 py-20">
-                      <div className="text-sm font-medium italic">이 구역은 비어 있습니다.</div>
-                    </div>
-                  ) : (
-                    tasks.filter(t => t.quadrant === q.id).map(task => (
-                      <TaskItem 
-                        key={task.id} 
-                        task={task} 
-                        toggleTask={toggleTask} 
-                        deleteTask={deleteTask} 
-                        moveTask={moveTask}
-                        qStyle={q}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-             <div className="space-y-4">
+          <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+               <div>
+                <h2 className="text-xl font-black text-slate-800">전체 작업 리스트</h2>
+                <p className="text-sm text-slate-500 font-medium">등록된 모든 할 일을 시간순으로 관리하세요.</p>
+               </div>
+               <button 
+                onClick={clearCompleted}
+                className="flex items-center gap-2 px-6 py-2.5 bg-rose-50 text-rose-600 rounded-2xl text-sm font-black hover:bg-rose-100 transition-all border border-rose-100"
+              >
+                <Trash size={16} /> 완료된 항목 정리
+              </button>
+             </div>
+             <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
                {tasks.length === 0 ? (
-                 <div className="py-20 text-center text-slate-400">등록된 할 일이 없습니다.</div>
+                 <div className="py-32 text-center">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                      <ListTodo size={32} />
+                    </div>
+                    <p className="text-slate-400 font-bold">비어 있는 리스트입니다.</p>
+                 </div>
                ) : (
                  tasks.map(task => (
                    <TaskItem 
@@ -264,6 +299,11 @@ const App = () => {
                     toggleTask={toggleTask} 
                     deleteTask={deleteTask} 
                     moveTask={moveTask}
+                    startEdit={startEdit}
+                    editingId={editingId}
+                    editText={editText}
+                    setEditText={setEditText}
+                    saveEdit={saveEdit}
                     qStyle={quadrants.find(q => q.id === task.quadrant)}
                     showQuadrantLabel
                   />
@@ -272,56 +312,122 @@ const App = () => {
              </div>
           </div>
         )}
-      </main>
 
-      {/* Footer Info */}
-      <footer className="max-w-6xl mx-auto px-6 mt-12 mb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-          <Info size={12} /> 효율적인 시간 관리를 위한 아이젠하워 원칙
+        {/* Floating Stats Footer */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-8 z-50 border border-white/10">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Tasks</span>
+            <span className="text-xl font-black">{stats.total}</span>
+          </div>
+          <div className="w-px h-8 bg-white/10"></div>
+          <div className="flex flex-col flex-1 min-w-[120px]">
+            <div className="flex justify-between items-end mb-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Efficiency</span>
+              <span className="text-xs font-black text-indigo-400">{stats.percent}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-400 transition-all duration-700" style={{ width: `${stats.percent}%` }}></div>
+            </div>
+          </div>
         </div>
-      </footer>
+      </main>
+      
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #E2E8F0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #CBD5E1;
+        }
+      `}</style>
     </div>
   );
 };
 
-const TaskItem = ({ task, toggleTask, deleteTask, moveTask, qStyle, showQuadrantLabel }) => (
-  <div className={`group flex items-center gap-3 p-4 rounded-2xl border transition-all ${task.completed ? 'bg-slate-50 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-sm'}`}>
-    <button 
-      onClick={() => toggleTask(task.id)}
-      className={`flex-shrink-0 transition-all ${task.completed ? 'text-indigo-500 scale-110' : 'text-slate-300 hover:text-slate-400'}`}
-    >
-      {task.completed ? <CheckCircle2 size={22} fill="currentColor" className="text-white fill-indigo-500" /> : <Circle size={22} />}
-    </button>
-    
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 mb-0.5">
-        {showQuadrantLabel && (
-          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${qStyle.textColor} ${qStyle.bgColor} border ${qStyle.borderColor}`}>
-            Q{task.quadrant}
-          </span>
+const TaskItem = ({ 
+  task, toggleTask, deleteTask, moveTask, qStyle, 
+  showQuadrantLabel, startEdit, editingId, editText, setEditText, saveEdit 
+}) => {
+  const isEditing = editingId === task.id;
+
+  return (
+    <div className={`group flex items-center gap-4 p-5 rounded-[1.5rem] border-2 transition-all ${task.completed ? 'bg-slate-50/50 border-slate-100' : 'bg-white border-slate-50 shadow-sm hover:border-indigo-100 hover:shadow-indigo-100/30'}`}>
+      <button 
+        onClick={() => toggleTask(task.id)}
+        className={`flex-shrink-0 transition-all transform hover:scale-110 ${task.completed ? 'text-indigo-500' : 'text-slate-200 hover:text-indigo-300'}`}
+      >
+        {task.completed ? <CheckCircle2 size={24} fill="currentColor" className="text-white fill-indigo-500" /> : <Circle size={24} />}
+      </button>
+      
+      <div className="flex-1 min-w-0">
+        {isEditing ? (
+          <div className="flex items-center gap-2">
+            <input 
+              autoFocus
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+              className="flex-1 bg-slate-100 px-3 py-1.5 rounded-lg font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button onClick={saveEdit} className="p-1.5 text-emerald-600 bg-emerald-50 rounded-md hover:bg-emerald-100">
+              <Save size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              {showQuadrantLabel && (
+                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${qStyle.textColor} ${qStyle.bgColor} border border-current opacity-70`}>
+                  Q{task.quadrant}
+                </span>
+              )}
+              <span className={`text-base font-bold truncate transition-all ${task.completed ? 'text-slate-300 line-through italic' : 'text-slate-700'}`}>
+                {task.text}
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-300 font-medium mt-0.5">
+              {new Date(task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 생성
+            </span>
+          </div>
         )}
-        <span className={`text-sm font-semibold truncate ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-          {task.text}
-        </span>
+      </div>
+
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {!task.completed && (
+          <>
+            <button 
+              onClick={() => startEdit(task)}
+              className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+              title="편집"
+            >
+              <Edit3 size={16} />
+            </button>
+            <button 
+              onClick={() => moveTask(task.id)}
+              className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+              title="다음 단계로 이동"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
+        <button 
+          onClick={() => deleteTask(task.id)}
+          className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+          title="삭제"
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
     </div>
-
-    <div className="flex items-center gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-      <button 
-        onClick={() => moveTask(task.id)}
-        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
-        title="다음 사분면으로 이동"
-      >
-        <ChevronRight size={18} />
-      </button>
-      <button 
-        onClick={() => deleteTask(task.id)}
-        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-      >
-        <Trash2 size={18} />
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 export default App;
