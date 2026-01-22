@@ -1,211 +1,321 @@
-import streamlit as st
-import requests
-import json
-import uuid
-from datetime import datetime, timedelta
+import React, { useState, useEffect, useRef } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { 
+  Plus, Trash2, CheckCircle2, Circle, AlertCircle, 
+  Clock, Users, Trash, Calendar, ChevronLeft, 
+  ChevronRight, GripVertical, Sparkles, X, Loader2
+} from 'lucide-react';
 
-# --- 페이지 설정 ---
-st.set_page_config(page_title="아이젠하워 매트릭스", layout="wide", initial_sidebar_state="collapsed")
+// --- Firebase Configuration ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'eisenhower-matrix-v2';
+const apiKey = ""; // Gemini API Key
 
-# --- 고급 스타일 커스텀 (겹침 방지 및 모바일 최적화) ---
-st.markdown("""
-    <style>
-    /* 기본 배경 및 여백 설정 */
-    .main { background-color: #f8fafc; }
-    .block-container { 
-        padding: 0.75rem !important; 
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [taskInput, setTaskInput] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(true);
+  
+  // AI States
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
+  const [showAiModal, setShowAiModal] = useState(false);
+
+  // 1. Authentication
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (error) {
+        console.error("Auth error:", error);
+      }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Data Fetching
+  useEffect(() => {
+    if (!user) return;
+    const q = collection(db, 'artifacts', appId, 'users', user.uid, 'tasks');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const taskList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTasks(taskList);
+    }, (error) => {
+      console.error("Firestore error:", error);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const visibleTasks = tasks.filter(task => {
+    const isSameDate = task.date === selectedDate;
+    const isPastUncompleted = task.date < selectedDate && !task.completed;
+    return isSameDate || isPastUncompleted;
+  });
+
+  // --- Gemini API Call ---
+  const callGemini = async (prompt, systemInstruction = "") => {
+    const maxRetries = 5;
+    let delay = 1000;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+          })
+        });
+        if (!response.ok) throw new Error('API Request Failed');
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text;
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
+      }
     }
-    
-    /* [강력 권장] 모바일 세로 모드에서도 절대 깨지지 않는 2x2 그리드 */
-    [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        gap: 12px !important;
-        margin-bottom: 12px !important;
+  };
+
+  const analyzeTaskWithAI = async (task) => {
+    setAiLoading(true);
+    setAiResponse(null);
+    setShowAiModal(true);
+    const quadrantText = {
+      1: "중요하고 긴급한 일", 2: "중요하지만 긴급하지 않은 일",
+      3: "긴급하지만 중요하지 않은 일", 4: "중요하지도 긴급하지도 않은 일"
+    }[task.important ? (task.urgent ? 1 : 2) : (task.urgent ? 3 : 4)];
+
+    try {
+      const result = await callGemini(`"${task.text}" (${quadrantText}) 이 일의 효율적인 처리 방법을 조언해줘.`, "생산성 전문가로서 한국어로 친절하게 3~5줄 답변해줘.");
+      setAiResponse(result);
+    } catch (err) {
+      setAiResponse("AI 분석 중 오류가 발생했습니다.");
+    } finally {
+      setAiLoading(false);
     }
-    
-    [data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        width: 50% !important;
-        min-width: 0px !important;
-        flex-basis: 50% !important;
-        flex-grow: 1 !important;
-        flex-shrink: 0 !important;
-        padding: 0 !important;
+  };
+
+  const getDailyCoaching = async () => {
+    if (visibleTasks.length === 0) return;
+    setAiLoading(true);
+    setAiResponse(null);
+    setShowAiModal(true);
+    const list = visibleTasks.map(t => `- [${t.important ? '중요' : '보통'}/${t.urgent ? '긴급' : '비긴급'}] ${t.text}`).join('\n');
+    try {
+      const result = await callGemini(`오늘의 할 일:\n${list}\n업무 전략을 짜줘.`, "시간 관리 전문가로서 한국어로 요약해줘.");
+      setAiResponse(result);
+    } catch (err) {
+      setAiResponse("코칭을 가져오지 못했습니다.");
+    } finally {
+      setAiLoading(false);
     }
+  };
 
-    /* 사분면 헤더 (세련된 그라데이션 및 그림자) */
-    .q-header {
-        font-weight: 800;
-        padding: 10px 4px;
-        font-size: 0.7rem;
-        text-align: center;
-        color: #1e293b;
-        border-radius: 12px 12px 0 0;
-        box-shadow: inset 0 -2px 4px rgba(0,0,0,0.02);
+  const addTaskToQuadrant = async (quadrantNum) => {
+    if (!taskInput.trim() || !user) return;
+    const config = {
+      1: { urgent: true, important: true },
+      2: { urgent: false, important: true },
+      3: { urgent: true, important: false },
+      4: { urgent: false, important: false }
+    }[quadrantNum];
+
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'tasks'), {
+        text: taskInput,
+        ...config,
+        completed: false,
+        date: selectedDate,
+        createdAt: Date.now()
+      });
+      setTaskInput('');
+    } catch (error) {
+      console.error("Error adding task:", error);
     }
+  };
 
-    /* 할 일 목록 영역 (글씨 잘림 및 버튼 겹침 방지) */
-    .quadrant-container {
-        padding: 8px;
-        background-color: #ffffff;
-        min-height: 160px;
-        max-height: 40vh;
-        overflow-y: auto;
-        border: 1px solid #e2e8f0;
-        border-radius: 0 0 12px 12px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    }
+  const toggleComplete = async (task) => {
+    if (!user) return;
+    await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', task.id), { completed: !task.completed });
+  };
 
-    /* 할 일 텍스트 가독성 (긴 문장 자동 줄바꿈) */
-    .task-text { 
-        font-size: 0.75rem !important; 
-        line-height: 1.4 !important; 
-        margin: 0 !important;
-        word-wrap: break-word !important;
-        overflow-wrap: anywhere !important;
-        white-space: normal !important;
-        color: #334155;
-    }
-    
-    /* 체크박스와 삭제 버튼 겹침 방지 */
-    .task-row {
-        display: flex;
-        align-items: flex-start;
-        padding: 4px 0;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    
-    /* ➕ 추가 버튼 (팝오버) 스타일 최적화 - 겹침 방지 핵심 */
-    div[data-testid="stPopover"] {
-        margin: 4px 0 !important;
-        width: 100% !important;
-    }
-    
-    div[data-testid="stPopover"] > button {
-        padding: 4px 0 !important;
-        font-size: 0.65rem !important;
-        font-weight: 700 !important;
-        min-height: 30px !important;
-        border-radius: 8px !important;
-        background-color: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        color: #64748b !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-        width: 100% !important;
-    }
-    
-    /* 체크박스 크기 조절 */
-    div[data-testid="stCheckbox"] { 
-        padding-top: 2px !important;
-    }
-    div[data-testid="stCheckbox"] label { display: none !important; }
-    
-    /* 스크롤바 세련된 디자인 */
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    
-    /* 불필요한 기본 UI 제거 */
-    #MainMenu, footer, header { visibility: hidden; }
+  const deleteTask = async (id) => {
+    if (!user) return;
+    await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', id));
+  };
 
-    /* 상단 영역 슬림화 */
-    .stDateInput {
-        margin-top: -10px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+  const onDragStart = (e, taskId) => e.dataTransfer.setData("taskId", taskId);
+  const onDragOver = (e) => e.preventDefault();
+  const onDrop = async (e, quadrantNum) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("taskId");
+    if (!user || !taskId) return;
+    const config = {
+      1: { urgent: true, important: true }, 2: { urgent: false, important: true },
+      3: { urgent: true, important: false }, 4: { urgent: false, important: false }
+    }[quadrantNum];
+    await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'tasks', taskId), config);
+  };
 
-# --- 데이터 관리 ---
-if 'tasks' not in st.session_state:
-    st.session_state.tasks = []
+  const changeDate = (days) => {
+    const current = new Date(selectedDate);
+    current.setDate(current.getDate() + days);
+    setSelectedDate(current.toISOString().split('T')[0]);
+  };
 
-def add_task(text, quadrant_num, date):
-    if not text.strip(): return
-    config = {
-        1: {"urgent": True, "important": True},
-        2: {"urgent": False, "important": True},
-        3: {"urgent": True, "important": False},
-        4: {"urgent": False, "important": False}
-    }[quadrant_num]
-    
-    st.session_state.tasks.append({
-        "id": str(uuid.uuid4()), 
-        "text": text,
-        "urgent": config["urgent"],
-        "important": config["important"],
-        "completed": False,
-        "date": str(date),
-        "quadrant": quadrant_num
-    })
+  // Color Mapping for Pastels
+  const quadrantColors = {
+    1: { border: 'border-rose-200', bg: 'bg-rose-50', icon: 'text-rose-500', btn: 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-500 hover:text-white hover:border-rose-500' },
+    2: { border: 'border-emerald-200', bg: 'bg-emerald-50', icon: 'text-emerald-500', btn: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-500 hover:text-white hover:border-emerald-500' },
+    3: { border: 'border-sky-200', bg: 'bg-sky-50', icon: 'text-sky-500', btn: 'bg-sky-50 text-sky-600 border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500' },
+    4: { border: 'border-violet-200', bg: 'bg-violet-50', icon: 'text-violet-500', btn: 'bg-violet-50 text-violet-600 border-violet-100 hover:bg-violet-500 hover:text-white hover:border-violet-500' }
+  };
 
-# --- 상단 헤더 ---
-c_title, c_date = st.columns([1.1, 0.9])
-with c_title: 
-    st.markdown("<h3 style='margin:0; color:#0f172a; font-size:1.3rem; letter-spacing:-0.5px;'>Focus Matrix</h3>", unsafe_allow_html=True)
-with c_date: 
-    selected_date = st.date_input("날짜", datetime.now(), label_visibility="collapsed")
-
-# --- 매트릭스 사분면 설정 ---
-quadrants = [
-    {"num": 1, "title": "중요 & 긴급", "sub": "즉시 처리", "color": "#fee2e2", "icon": "🔥"},
-    {"num": 2, "title": "중요 & 비긴급", "sub": "계획 수립", "color": "#dcfce7", "icon": "📅"},
-    {"num": 3, "title": "긴급 & 비중요", "sub": "위임/거절", "color": "#dbeafe", "icon": "👤"},
-    {"num": 4, "title": "비중요 & 비긴급", "sub": "삭제/보류", "color": "#f1f5f9", "icon": "🗑️"}
-]
-
-visible_tasks = [t for t in st.session_state.tasks if t['date'] == str(selected_date) or (t['date'] < str(selected_date) and not t['completed'])]
-
-# --- 2x2 그리드 렌더링 ---
-row1 = st.columns(2)
-row2 = st.columns(2)
-grid = [row1[0], row1[1], row2[0], row2[1]]
-
-for i, q in enumerate(quadrants):
-    with grid[i]:
-        # 헤더 섹션
-        st.markdown(f'''
-            <div class="q-header" style="background-color: {q["color"]};">
-                <div style="font-size:0.8rem;">{q["icon"]} {q["title"]}</div>
-                <div style="font-size:0.5rem; opacity:0.6; font-weight:400;">{q["sub"]}</div>
+  const Quadrant = ({ num, title, urgent, important, icon: Icon }) => {
+    const quadrantTasks = visibleTasks.filter(t => t.urgent === urgent && t.important === important);
+    const styles = quadrantColors[num];
+    return (
+      <div 
+        className={`flex flex-col h-full rounded-2xl border-2 p-2 ${styles.bg} ${styles.border} shadow-sm overflow-hidden relative transition-colors`}
+        onDragOver={onDragOver}
+        onDrop={(e) => onDrop(e, num)}
+      >
+        <div className="flex items-center gap-2 mb-2 shrink-0 px-1">
+          <div className={`p-1 rounded-lg bg-white bg-opacity-60 shadow-sm`}>
+            <Icon size={12} className={styles.icon} />
+          </div>
+          <h3 className="font-bold text-slate-700 text-[10px] sm:text-xs truncate">{num}. {title}</h3>
+          <span className="ml-auto bg-white bg-opacity-60 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold">{quadrantTasks.length}</span>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          {quadrantTasks.map(task => (
+            <div 
+              key={task.id} draggable onDragStart={(e) => onDragStart(e, task.id)}
+              className={`group flex items-start gap-1.5 p-2 rounded-xl border border-white/50 bg-white/80 backdrop-blur-sm shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-200 transition-all ${task.date < selectedDate ? 'ring-1 ring-amber-200' : ''}`}
+            >
+              <button onClick={() => toggleComplete(task)} className="mt-0.5 shrink-0">
+                {task.completed ? <CheckCircle2 size={14} className="text-green-500" /> : <Circle size={14} className="text-slate-200" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[11px] leading-tight break-words ${task.completed ? 'text-slate-300 line-through' : 'text-slate-700 font-medium'}`}>{task.text}</p>
+                <button onClick={() => analyzeTaskWithAI(task)} className="text-[8px] text-indigo-500 hover:underline mt-1 font-bold">✨ AI 가이드</button>
+              </div>
+              <button onClick={() => deleteTask(task.id)} className="text-slate-200 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
             </div>
-        ''', unsafe_allow_html=True)
-        
-        # ➕ 추가 버튼 (헤더와 겹치지 않도록 별도 공간 확보)
-        with st.popover("➕ 할 일", use_container_width=True):
-            in_val = st.text_input("할 일 입력", key=f"in_{q['num']}", label_visibility="collapsed", placeholder="무엇을 할까요?")
-            if st.button("저장", key=f"btn_{q['num']}", use_container_width=True):
-                add_task(in_val, q['num'], selected_date)
-                st.rerun()
-        
-        # 목록 리스트 영역
-        q_tasks = [t for t in visible_tasks if t['quadrant'] == q['num']]
-        
-        st.markdown('<div class="quadrant-container">', unsafe_allow_html=True)
-        if not q_tasks:
-            st.markdown("<div style='text-align:center; padding-top:40px; color:#94a3b8; font-size:0.6rem; font-style:italic;'>내용 없음</div>", unsafe_allow_html=True)
-        
-        for task in q_tasks:
-            # 체크박스 | 텍스트 | 삭제 버튼 레이아웃
-            t_col1, t_col2, t_col3 = st.columns([0.2, 0.65, 0.15])
-            
-            with t_col1:
-                new_status = st.checkbox("", value=task['completed'], key=f"chk_{task['id']}")
-                if new_status != task['completed']:
-                    task['completed'] = new_status
-                    st.rerun()
-            
-            with t_col2:
-                txt = task['text']
-                style = "color:#cbd5e1; text-decoration:line-through;" if task['completed'] else "color:#334155; font-weight:500;"
-                prefix = "<span style='color:#f59e0b;'>⏳ </span>" if task['date'] < str(selected_date) else ""
-                st.markdown(f"<div class='task-text' style='{style}'>{prefix}{txt}</div>", unsafe_allow_html=True)
-            
-            with t_col3:
-                if st.button("×", key=f"del_{task['id']}", help="삭제"):
-                    st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
-                    st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+          ))}
+          {quadrantTasks.length === 0 && (
+            <div className="h-full flex items-center justify-center text-slate-300 text-[9px] italic py-4">기록 없음</div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-st.markdown("---")
-st.caption("Focus Matrix Pro v3.5 | Clean 2x2 Layout")
+  return (
+    <div className="h-screen bg-white font-sans text-slate-900 flex flex-col overflow-hidden relative">
+      {/* AI Modal */}
+      {showAiModal && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[80vh]">
+            <div className="bg-indigo-600 px-5 py-4 flex justify-between items-center text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} />
+                <h2 className="font-bold text-sm">AI 가이드</h2>
+              </div>
+              <button onClick={() => setShowAiModal(false)} className="hover:bg-white/20 p-1 rounded-full"><X size={18} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              {aiLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3">
+                  <Loader2 size={32} className="text-indigo-600 animate-spin" />
+                  <p className="text-xs text-slate-500">분석 중...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap break-words italic">
+                    {aiResponse}
+                  </p>
+                  <button onClick={() => setShowAiModal(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold">확인</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0 z-10">
+        <div className="flex items-center gap-2">
+          <Calendar className="text-indigo-500" size={18} />
+          <div className="flex items-center gap-1">
+            <button onClick={() => changeDate(-1)} className="p-1"><ChevronLeft size={16}/></button>
+            <span className="font-bold text-xs w-20 text-center">{selectedDate === new Date().toISOString().split('T')[0] ? '오늘' : selectedDate}</span>
+            <button onClick={() => changeDate(1)} className="p-1"><ChevronRight size={16}/></button>
+          </div>
+        </div>
+        <h1 className="font-bold text-sm text-slate-700">아우젠하워 매트릭스</h1>
+        <button onClick={getDailyCoaching} className="text-[10px] font-bold text-white bg-indigo-500 px-4 py-1.5 rounded-full shadow-lg shadow-indigo-100">✨ 코칭</button>
+      </header>
+
+      <main className="flex-1 flex flex-col p-3 gap-3 overflow-hidden">
+        <section className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100 shrink-0">
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={taskInput}
+                onChange={(e) => setTaskInput(e.target.value)}
+                placeholder="어떤 일을 기록할까요?"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[1, 2, 3, 4].map(num => (
+                <button
+                  key={num}
+                  onClick={() => addTaskToQuadrant(num)}
+                  className={`py-2.5 rounded-xl text-[10px] font-black transition-all border-2 active:scale-95 shadow-sm ${quadrantColors[num].btn}`}
+                >
+                  {num}번 저장
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-2 min-h-0 pb-2">
+          <Quadrant num={1} title="중요/긴급" urgent={true} important={true} icon={AlertCircle} />
+          <Quadrant num={2} title="중요/비긴급" urgent={false} important={true} icon={Clock} />
+          <Quadrant num={3} title="긴급/비중요" urgent={true} important={false} icon={Users} />
+          <Quadrant num={4} title="여유/보류" urgent={false} important={false} icon={Trash} />
+        </div>
+      </main>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      `}} />
+    </div>
+  );
+};
+
+export default App;
