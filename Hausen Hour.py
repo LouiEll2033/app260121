@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # --- 페이지 설정 ---
 st.set_page_config(page_title="아이젠하워 기록장", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 스타일 커스텀 (모바일 2x2 그리드 절대 고정) ---
+# --- 스타일 커스텀 (모바일 2x2 그리드 강제 고정 및 공간 극대화) ---
 st.markdown("""
     <style>
     /* 전체 배경 및 여백 최적화 */
@@ -26,8 +26,8 @@ st.markdown("""
         flex-direction: row !important;
         flex-wrap: nowrap !important; /* 절대 줄바꿈 금지 */
         width: 100% !important;
-        gap: 6px !important;
-        margin-bottom: 6px !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
     }
     
     /* 각 컬럼이 정확히 너비의 50%를 차지하도록 박제 (최소 너비 제한 해제) */
@@ -56,7 +56,7 @@ st.markdown("""
         border-radius: 0 0 8px 8px;
         padding: 4px;
         background-color: #fafafa;
-        min-height: 110px;
+        min-height: 120px;
         max-height: 35vh; /* 화면의 1/3 정도를 차지하여 4개가 한눈에 들어오게 함 */
         overflow-y: auto;
     }
@@ -132,7 +132,7 @@ with st.expander("🚀 빠른 기록", expanded=False):
     q_input = st.text_input("내용", key="q_in", placeholder="할 일 입력...", label_visibility="collapsed")
     b_row1 = st.columns(2)
     b_row2 = st.columns(2)
-    b_grid = [b_row1[0], b_row1[1], row2_col := b_row2[0], row2_col2 := b_row2[1]]
+    b_grid = [b_row1[0], b_row1[1], b_row2[0], b_row2[1]]
     for i in range(4):
         if b_grid[i].button(f"{i+1}번 저장", use_container_width=True, key=f"q_btn_{i}"):
             add_task(q_input, i+1, selected_date)
