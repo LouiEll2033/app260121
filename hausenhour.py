@@ -23,7 +23,7 @@ with st.sidebar:
 if st.session_state.view_mode == "Mobile":
     st.markdown("""
         <style>
-        /* 1. 전체 레이아웃 강제 고정 */
+        /* 1. 전체 레이아웃 강제 고정 및 스크롤 금지 */
         html, body, [data-testid="stAppViewContainer"] {
             overflow: hidden !important;
             height: 100vh !important;
@@ -31,9 +31,9 @@ if st.session_state.view_mode == "Mobile":
         [data-testid="stHeader"] { visibility: hidden; height: 0; }
         footer { visibility: hidden; }
         
-        /* 2. 메인 컨테이너 패딩 최소화 */
+        /* 2. 메인 컨테이너 패딩 최소화 및 높이 고정 */
         .block-container { 
-            padding-top: 0.2rem !important; 
+            padding-top: 0.1rem !important; 
             padding-bottom: 0 !important; 
             padding-left: 0.1rem !important; 
             padding-right: 0.1rem !important;
@@ -43,12 +43,13 @@ if st.session_state.view_mode == "Mobile":
             overflow: hidden !important;
         }
         
-        /* 3. Streamlit 기본 간격 제거 */
+        /* 3. Streamlit 기본 간격(Gap) 완전 제거 */
         [data-testid="stVerticalBlock"] { gap: 0rem !important; }
         [data-testid="stHorizontalBlock"] { gap: 2px !important; margin: 0 !important; padding: 0 !important; }
         div[data-testid="stVerticalBlockBorderWrapper"] > div > div { gap: 0rem !important; }
+        div[data-testid="element-container"] { margin-bottom: 0px !important; }
 
-        /* 4. 2x2 그리드 강제 고정 */
+        /* 4. 2x2 그리드 너비 강제 고정 */
         [data-testid="stHorizontalBlock"] [data-testid="column"] {
             width: calc(50% - 1px) !important;
             flex: 1 1 calc(50% - 1px) !important;
@@ -56,23 +57,23 @@ if st.session_state.view_mode == "Mobile":
             max-width: 50% !important;
         }
 
-        /* 5. 사분면 높이 극단적 최적화 (세로 모드용) */
+        /* 5. 사분면 높이 극단적 최적화 (세로 모드 박제의 핵심) */
         .q-header {
-            font-weight: 800; padding: 1px 0; border-radius: 4px 4px 0 0;
+            font-weight: 800; padding: 2px 0; border-radius: 4px 4px 0 0;
             font-size: 0.6rem; text-align: center; color: #333;
             border: 1px solid rgba(0,0,0,0.05); line-height: 1;
         }
 
         .quadrant-container {
             border: 1px solid #f1f5f9; border-radius: 0 0 4px 4px;
-            padding: 2px; background-color: #fafafa;
-            /* 높이를 더 낮추어 헤더/버전선택기 공간 확보 */
-            height: 32vh; 
+            padding: 1px; background-color: #fafafa;
+            /* 높이를 더 줄여서 상단/중간 요소들과의 합이 100%를 안넘게 함 */
+            height: 28vh; 
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* 6. 할 일 리스트 압축 */
+        /* 6. 텍스트 가독성 유지 및 압축 */
         .stMarkdown div p { font-size: 0.65rem !important; line-height: 1.0 !important; margin: 0 !important; }
         
         /* 체크박스 영역 최소화 */
@@ -83,19 +84,19 @@ if st.session_state.view_mode == "Mobile":
         }
         div[data-testid="stCheckbox"] label { display: none !important; }
 
-        /* 버튼 및 팝오버 크기 최소화 (세로 모드 공간 확보의 핵심) */
+        /* 버튼 및 팝오버 크기 최소화 */
         .stButton>button, div[data-testid="stPopover"] > button {
-            height: 16px !important; 
-            min-height: 16px !important;
+            height: 14px !important; 
+            min-height: 14px !important;
             font-size: 0.5rem !important;
             padding: 0 !important;
             line-height: 1 !important;
             border-radius: 2px !important;
         }
         
-        /* 상단 날짜 입력창 크기 축소 */
-        div[data-testid="stDateInput"] { transform: scale(0.75); transform-origin: top right; margin-top: -5px; }
-        h6 { font-size: 0.7rem !important; margin: 0 !important; }
+        /* 상단 날짜 입력창 크기 축소 및 여백 제거 */
+        div[data-testid="stDateInput"] { transform: scale(0.7); transform-origin: top right; margin-top: -10px; }
+        h6 { font-size: 0.65rem !important; margin: 0 !important; padding-top: 2px !important; }
         </style>
         """, unsafe_allow_html=True)
 else:
