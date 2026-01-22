@@ -205,7 +205,7 @@ const App = () => {
         {activeTab === 'matrix' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {quadrants.map((q) => (
-              <div key={q.id} className={`flex flex-col bg-white rounded-[2.5rem] border-2 ${q.borderColor} overflow-hidden shadow-sm`}>
+              <div key={q.id} className={`flex flex-col bg-white rounded-3xl border-2 ${q.borderColor} overflow-hidden shadow-sm`}>
                 <div className={`p-6 flex items-center justify-between ${q.bgColor}`}>
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center ${q.textColor}`}>
@@ -238,7 +238,7 @@ const App = () => {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl p-8 space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-8 space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-black text-slate-800">전체 리스트</h2>
               <button onClick={clearCompleted} className="text-xs font-black text-rose-500 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 transition-colors">
@@ -265,7 +265,7 @@ const App = () => {
         )}
 
         {/* Stats Footer */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-8 z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-8 z-50">
           <div className="flex flex-col text-center">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</span>
             <span className="text-xl font-black">{stats.total}</span>
@@ -288,7 +288,7 @@ const TaskItem = ({
   const isEditing = editingId === task.id;
 
   return (
-    <div className={`group flex items-center gap-4 p-4 rounded-[1.2rem] border-2 transition-all ${task.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-50 shadow-sm hover:border-indigo-100'}`}>
+    <div className={`group flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${task.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-50 shadow-sm hover:border-indigo-100'}`}>
       <button onClick={() => toggleTask(task.id)} className={`flex-shrink-0 transition-transform hover:scale-110 ${task.completed ? 'text-indigo-500' : 'text-slate-200'}`}>
         {task.completed ? <CheckCircle2 size={24} fill="currentColor" className="text-white fill-indigo-500" /> : <Circle size={24} />}
       </button>
