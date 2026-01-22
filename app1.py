@@ -145,17 +145,14 @@ with s_col2:
 with s_col3:
     st.markdown(f"<div class='stat-container'><div class='stat-val'>{rate}%</div><div class='stat-lbl'>진행률</div></div>", unsafe_allow_html=True)
 with s_col4:
-    # 긴급 추가 버튼 스타일링
-    if st.button(f"{urgent_count}\n긴급 추가", key="urgent_trigger", use_container_width=True):
-        st.session_state.adding_to = 1
-        st.rerun()
-    st.markdown('<style>div[data-testid="stColumn"]:nth-of-type(4) button { border: 2px solid #ef4444 !important; color: #ef4444 !important; border-radius: 12px !important; height: 100% !important; background: transparent !important; font-weight: 800 !important; }</style>', unsafe_allow_html=True)
+    # 빨간색 버튼 형태를 제거하고 일반 통계 카드로 복구
+    st.markdown(f"<div class='stat-container'><div class='stat-val'>{urgent_count}</div><div class='stat-lbl'>긴급</div></div>", unsafe_allow_html=True)
 
 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 st.progress(rate / 100)
 st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-# 8. 매트릭스 그리드 (색상 및 클릭 추가)
+# 8. 매트릭스 그리드 (사분면별 색상 유지)
 quad_data = [
     {"n": 1, "t": "🔥 DO FIRST", "desc": "중요함 & 긴급함", "bg": "#fee2e2", "fg": "#b91c1c", "border": "#fca5a5"},
     {"n": 2, "t": "🌱 SCHEDULE", "desc": "중요함 & 여유로움", "bg": "#dcfce7", "fg": "#15803d", "border": "#86efac"},
@@ -246,4 +243,4 @@ with footer_col2:
         st.session_state.tasks = []
         st.rerun()
 
-st.markdown("<div style='text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;'>Focus on what matters. Eisenhower Matrix v8.0</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;'>Focus on what matters. Eisenhower Matrix v8.1</div>", unsafe_allow_html=True)
