@@ -77,7 +77,7 @@ if st.session_state.view_mode == "Mobile":
         .quadrant-container {
             border: 1px solid #f1f5f9; border-radius: 0 0 6px 6px;
             padding: 4px; background-color: #fafafa;
-            height: 32vh; /* 상하 2단 합쳐서 64vh + 기타 요소 약 30vh = 94vh로 한 화면 유도 */
+            height: 25vh; /* 상하 2단 합쳐서 64vh + 기타 요소 약 30vh = 94vh로 한 화면 유도 */
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -219,3 +219,4 @@ if st.session_state.view_mode == "PC":
     st.caption("Eisenhower Matrix - PC Optimized View")
 else:
     st.markdown("<div style='font-size:8px; color:#ccc; text-align:center;'>Focus Matrix 2x2 Fixed</div>", unsafe_allow_html=True)
+
