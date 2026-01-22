@@ -1,229 +1,327 @@
-import streamlit as st
-import uuid
-from datetime import datetime
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Plus, Trash2, ChevronRight, CheckCircle2, 
+  Circle, AlertCircle, Clock, Users, 
+  XOctagon, LayoutGrid, ListTodo, Trash,
+  BarChart3, Settings2, Info
+} from 'lucide-react';
 
-# 1. 페이지 설정
-st.set_page_config(
-    page_title="Eisenhower Matrix",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+const App = () => {
+  // 초기 데이터 또는 로컬 스토리지에서 불러오기
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('eisenhower-tasks');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, text: '이번 주 주간 보고서 작성', quadrant: 1, completed: false, createdAt: Date.now() },
+      { id: 2, text: '외국어 공부 30분', quadrant: 2, completed: false, createdAt: Date.now() },
+      { id: 3, text: '불필요한 회의 일정 조정', quadrant: 3, completed: false, createdAt: Date.now() },
+      { id: 4, text: '유튜브 무한 스크롤 방지', quadrant: 4, completed: false, createdAt: Date.now() },
+    ];
+  });
 
-# 2. 상태 초기화
-if 'tasks' not in st.session_state:
-    st.session_state.tasks = []
-if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
-if 'adding_to' not in st.session_state:
-    st.session_state.adding_to = None
+  const [newTask, setNewTask] = useState('');
+  const [selectedQuadrant, setSelectedQuadrant] = useState(1);
+  const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' or 'list'
 
-# 3. 테마 컬러 정의
-if st.session_state.dark_mode:
-    c = {
-        'bg': '#0f172a', 'card': '#1e293b', 'text': '#f8fafc', 
-        'muted': '#94a3b8', 'border': '#334155', 'accent': '#6366f1'
-    }
-else:
-    c = {
-        'bg': '#f8fafc', 'card': '#ffffff', 'text': '#1e293b', 
-        'muted': '#64748b', 'border': '#e2e8f0', 'accent': '#4f46e5'
-    }
+  // 데이터 변경 시 로컬 스토리지 저장
+  useEffect(() => {
+    localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
+  }, [tasks]);
 
-# 4. 커스텀 CSS (UI 고도화)
-st.markdown(f"""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+  const quadrants = [
+    { 
+      id: 1, 
+      title: 'Do First', 
+      label: '즉시 실행',
+      desc: '긴급 & 중요',
+      color: 'from-red-500 to-orange-500', 
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-700',
+      borderColor: 'border-red-200',
+      icon: <AlertCircle className="w-5 h-5" />
+    },
+    { 
+      id: 2, 
+      title: 'Schedule', 
+      label: '계획 수립',
+      desc: '중요하나 긴급하지 않음',
+      color: 'from-blue-500 to-indigo-500', 
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-700',
+      borderColor: 'border-blue-200',
+      icon: <Clock className="w-5 h-5" />
+    },
+    { 
+      id: 3, 
+      title: 'Delegate', 
+      label: '권한 위임',
+      desc: '긴급하나 중요하지 않음',
+      color: 'from-amber-500 to-yellow-500', 
+      bgColor: 'bg-amber-50',
+      textColor: 'text-amber-700',
+      borderColor: 'border-amber-200',
+      icon: <Users className="w-5 h-5" />
+    },
+    { 
+      id: 4, 
+      title: 'Eliminate', 
+      label: '삭제/제거',
+      desc: '긴급하지도 중요하지도 않음',
+      color: 'from-slate-500 to-gray-700', 
+      bgColor: 'bg-slate-100',
+      textColor: 'text-slate-700',
+      borderColor: 'border-slate-200',
+      icon: <XOctagon className="w-5 h-5" />
+    },
+  ];
+
+  const addTask = (e) => {
+    e.preventDefault();
+    if (!newTask.trim()) return;
+    const task = {
+      id: Date.now(),
+      text: newTask,
+      quadrant: selectedQuadrant,
+      completed: false,
+      createdAt: Date.now()
+    };
+    setTasks([task, ...tasks]);
+    setNewTask('');
+  };
+
+  const toggleTask = (id) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(t => t.id !== id));
+  };
+
+  const moveTask = (id) => {
+    setTasks(tasks.map(t => {
+      if (t.id === id) {
+        return { ...t, quadrant: t.quadrant === 4 ? 1 : t.quadrant + 1 };
+      }
+      return t;
+    }));
+  };
+
+  const clearCompleted = () => {
+    setTasks(tasks.filter(t => !t.completed));
+  };
+
+  // 통계 데이터 계산
+  const stats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    const quadrantCounts = [1, 2, 3, 4].map(q => tasks.filter(t => t.quadrant === q).length);
+    return { total, completed, quadrantCounts, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
+  }, [tasks]);
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans pb-20">
+      {/* Top Navbar */}
+      <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+              <LayoutGrid size={18} strokeWidth={2.5} />
+            </div>
+            <h1 className="text-xl font-extrabold tracking-tight text-slate-800">Eisenhower <span className="text-indigo-600">Pro</span></h1>
+          </div>
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setActiveTab('matrix')}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'matrix' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              매트릭스
+            </button>
+            <button 
+              onClick={() => setActiveTab('list')}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              전체 목록
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-6xl mx-auto px-6 pt-8">
+        {/* Statistics Dashboard */}
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">전체 할 일</p>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-black text-slate-800">{stats.total}</span>
+              <span className="text-slate-400 text-sm mb-1">건</span>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">진행률</p>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-black text-indigo-600">{stats.percent}%</span>
+              <div className="flex-1 h-2 bg-slate-100 rounded-full mb-2 overflow-hidden">
+                <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${stats.percent}%` }}></div>
+              </div>
+            </div>
+          </div>
+          <div className="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="flex gap-4">
+              {quadrants.map((q, i) => (
+                <div key={q.id} className="text-center">
+                  <div className={`w-2 h-8 mx-auto rounded-full mb-1 bg-gradient-to-t ${q.id === 1 ? 'from-red-500' : q.id === 2 ? 'from-blue-500' : q.id === 3 ? 'from-amber-500' : 'from-slate-500'} to-transparent opacity-30`}>
+                    <div className="w-full bg-current rounded-full" style={{ height: `${(stats.quadrantCounts[i] / (stats.total || 1)) * 100}%` }}></div>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400">Q{q.id}</span>
+                </div>
+              ))}
+            </div>
+            <button 
+              onClick={clearCompleted}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              <Trash size={16} /> 완료 항목 삭제
+            </button>
+          </div>
+        </section>
+
+        {/* Input Form */}
+        <form onSubmit={addTask} className="mb-10 group">
+          <div className="bg-white p-2 pl-6 rounded-2xl border-2 border-slate-200 shadow-sm focus-within:border-indigo-500 transition-all flex items-center gap-4">
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="새로운 작업 내용을 입력하세요..."
+              className="flex-1 bg-transparent py-3 outline-none text-slate-700 font-medium"
+            />
+            <div className="hidden sm:flex items-center gap-2 border-l border-slate-200 pl-4 mr-2">
+              <select 
+                value={selectedQuadrant}
+                onChange={(e) => setSelectedQuadrant(Number(e.target.value))}
+                className="bg-slate-50 text-xs font-bold py-2 px-3 rounded-lg outline-none cursor-pointer text-slate-600"
+              >
+                {quadrants.map(q => <option key={q.id} value={q.id}>Q{q.id} - {q.label}</option>)}
+              </select>
+            </div>
+            <button 
+              type="submit"
+              disabled={!newTask.trim()}
+              className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-30 disabled:hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
+            >
+              <Plus size={20} strokeWidth={3} />
+            </button>
+          </div>
+        </form>
+
+        {activeTab === 'matrix' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {quadrants.map((q) => (
+              <div key={q.id} className={`flex flex-col bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
+                <div className={`p-5 flex items-center justify-between border-b border-slate-100 ${q.bgColor}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl bg-white shadow-sm ${q.textColor}`}>
+                      {q.icon}
+                    </div>
+                    <div>
+                      <h3 className={`font-black text-sm uppercase tracking-wider ${q.textColor}`}>{q.title}</h3>
+                      <p className="text-slate-500 text-xs font-medium">{q.desc}</p>
+                    </div>
+                  </div>
+                  <span className="text-2xl font-black opacity-10">{q.id}</span>
+                </div>
+                
+                <div className="flex-1 p-4 space-y-3 min-h-[320px] max-h-[450px] overflow-y-auto">
+                  {tasks.filter(t => t.quadrant === q.id).length === 0 ? (
+                    <div className="h-full flex flex-row items-center justify-center opacity-30 gap-3 py-20">
+                      <div className="text-sm font-medium italic">이 구역은 비어 있습니다.</div>
+                    </div>
+                  ) : (
+                    tasks.filter(t => t.quadrant === q.id).map(task => (
+                      <TaskItem 
+                        key={task.id} 
+                        task={task} 
+                        toggleTask={toggleTask} 
+                        deleteTask={deleteTask} 
+                        moveTask={moveTask}
+                        qStyle={q}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+             <div className="space-y-4">
+               {tasks.length === 0 ? (
+                 <div className="py-20 text-center text-slate-400">등록된 할 일이 없습니다.</div>
+               ) : (
+                 tasks.map(task => (
+                   <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    toggleTask={toggleTask} 
+                    deleteTask={deleteTask} 
+                    moveTask={moveTask}
+                    qStyle={quadrants.find(q => q.id === task.quadrant)}
+                    showQuadrantLabel
+                  />
+                 ))
+               )}
+             </div>
+          </div>
+        )}
+      </main>
+
+      {/* Footer Info */}
+      <footer className="max-w-6xl mx-auto px-6 mt-12 mb-8 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+          <Info size={12} /> 효율적인 시간 관리를 위한 아이젠하워 원칙
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+const TaskItem = ({ task, toggleTask, deleteTask, moveTask, qStyle, showQuadrantLabel }) => (
+  <div className={`group flex items-center gap-3 p-4 rounded-2xl border transition-all ${task.completed ? 'bg-slate-50 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-sm'}`}>
+    <button 
+      onClick={() => toggleTask(task.id)}
+      className={`flex-shrink-0 transition-all ${task.completed ? 'text-indigo-500 scale-110' : 'text-slate-300 hover:text-slate-400'}`}
+    >
+      {task.completed ? <CheckCircle2 size={22} fill="currentColor" className="text-white fill-indigo-500" /> : <Circle size={22} />}
+    </button>
     
-    * {{ font-family: 'Inter', 'Noto Sans KR', sans-serif !important; }}
-    .main {{ background-color: {c['bg']} !important; }}
-    .block-container {{ padding: 1rem 2rem !important; max-width: 1000px !important; }}
-    
-    /* 헤더 */
-    .header-title {{
-        text-align: center; font-size: 2.2rem; font-weight: 800;
-        background: linear-gradient(135deg, #6366f1, #a855f7);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        margin-bottom: 1.5rem;
-    }}
-    
-    /* 통계 카드 */
-    .stat-container {{
-        background: {c['card']}; border: 1px solid {c['border']};
-        border-radius: 12px; padding: 15px; text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    }}
-    .stat-val {{ font-size: 1.5rem; font-weight: 800; color: {c['text']}; }}
-    .stat-lbl {{ font-size: 0.8rem; color: {c['muted']}; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }}
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 mb-0.5">
+        {showQuadrantLabel && (
+          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${qStyle.textColor} ${qStyle.bgColor} border ${qStyle.borderColor}`}>
+            Q{task.quadrant}
+          </span>
+        )}
+        <span className={`text-sm font-semibold truncate ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+          {task.text}
+        </span>
+      </div>
+    </div>
 
-    /* 사분면 카드 */
-    .q-card {{
-        background: {c['card']}; border-radius: 20px; padding: 0px; 
-        margin-bottom: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
-        overflow: hidden; min-height: 400px; border: 2px solid {c['border']};
-    }}
-    
-    /* 할 일 아이템 */
-    .task-row {{
-        display: flex; align-items: center; background: {c['bg']};
-        padding: 10px 14px; border-radius: 12px; margin: 0 12px 8px 12px;
-        border: 1px solid {c['border']}; transition: transform 0.2s ease;
-    }}
-    .task-text {{ font-size: 0.95rem; color: {c['text']}; flex-grow: 1; }}
-    .task-done {{ text-decoration: line-through; color: {c['muted']}; opacity: 0.6; }}
+    <div className="flex items-center gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+      <button 
+        onClick={() => moveTask(task.id)}
+        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+        title="다음 사분면으로 이동"
+      >
+        <ChevronRight size={18} />
+      </button>
+      <button 
+        onClick={() => deleteTask(task.id)}
+        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  </div>
+);
 
-    /* 기본 요소 커스텀 */
-    #MainMenu, footer, header {{ visibility: hidden; }}
-    div[data-testid="stCheckbox"] label {{ display: none !important; }}
-    
-    /* 카드 헤더 버튼 */
-    .header-btn > div > button {{
-        border-radius: 0px !important; border: none !important;
-        padding: 1.8rem 1rem !important; font-size: 1.25rem !important;
-        font-weight: 800 !important; margin: 0 !important;
-        text-align: center !important; width: 100% !important;
-    }}
-
-    /* 입력 영역 */
-    .input-area {{
-        background: {c['bg']}; margin: 0 12px 15px 12px;
-        padding: 15px; border-radius: 15px; border: 1px dashed {c['border']};
-    }}
-
-    /* 버튼 스타일 */
-    .stButton > button {{ border-radius: 10px !important; font-weight: 600 !important; }}
-</style>
-""", unsafe_allow_html=True)
-
-# 5. 비즈니스 로직
-def add_task(text, quad, date):
-    if not text.strip(): return
-    configs = {1: (True, True), 2: (False, True), 3: (True, False), 4: (False, False)}
-    urgent, important = configs[quad]
-    st.session_state.tasks.append({
-        "id": str(uuid.uuid4()), "text": text, "urgent": urgent, "important": important,
-        "completed": False, "date": str(date), "quadrant": quad
-    })
-    st.session_state.adding_to = None
-
-# 6. 상단 레이아웃
-st.markdown("<div class='header-title'>Productive Matrix</div>", unsafe_allow_html=True)
-
-top_col1, top_col2, top_col3 = st.columns([3, 1, 1])
-with top_col1:
-    selected_date = st.date_input("Date", datetime.now(), label_visibility="collapsed")
-with top_col2:
-    if st.button("✨ 완료 삭제", use_container_width=True):
-        st.session_state.tasks = [t for t in st.session_state.tasks if not t['completed']]
-        st.rerun()
-with top_col3:
-    dark = st.toggle("🌙 다크", value=st.session_state.dark_mode)
-    if dark != st.session_state.dark_mode:
-        st.session_state.dark_mode = dark
-        st.rerun()
-
-# 7. 통계 섹션 (진행률 제거)
-tasks_today = [t for t in st.session_state.tasks if t['date'] == str(selected_date)]
-total = len(tasks_today)
-done = len([t for t in tasks_today if t['completed']])
-urgent_count = len([t for t in tasks_today if t['urgent']])
-
-st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-s_col1, s_col2, s_col3 = st.columns(3)
-stats_list = [(total, '전체 할 일'), (done, '완료됨'), (urgent_count, '긴급 항목')]
-
-for i, (val, lbl) in enumerate(stats_list):
-    with [s_col1, s_col2, s_col3][i]:
-        st.markdown(f"<div class='stat-container'><div class='stat-val'>{val}</div><div class='stat-lbl'>{lbl}</div></div>", unsafe_allow_html=True)
-
-st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
-
-# 8. 매트릭스 그리드
-quad_data = [
-    {"n": 1, "t": "🔥 DO FIRST", "desc": "긴급 & 중요", "bg": "#fee2e2", "fg": "#b91c1c", "border": "#ef4444"},
-    {"n": 2, "t": "🌱 SCHEDULE", "desc": "중요하나 미긴급", "bg": "#dcfce7", "fg": "#15803d", "border": "#22c55e"},
-    {"n": 3, "t": "📢 DELEGATE", "desc": "긴급하나 미중요", "bg": "#e0f2fe", "fg": "#0369a1", "border": "#3b82f6"},
-    {"n": 4, "t": "☕ ELIMINATE", "desc": "미긴급 & 미중요", "bg": "#f1f5f9", "fg": "#334155", "border": "#64748b"}
-]
-
-if st.session_state.dark_mode:
-    for q in quad_data:
-        q['bg'] = "#1e293b"
-        q['border'] = q['fg']
-
-row1_col1, row1_col2 = st.columns(2)
-row2_col1, row2_col2 = st.columns(2)
-grid_layout = [row1_col1, row1_col2, row2_col1, row2_col2]
-
-# 오늘 할 일 + 과거 미완료 항목
-visible_tasks = [t for t in st.session_state.tasks if t['date'] == str(selected_date) or (t['date'] < str(selected_date) and not t['completed'])]
-
-for i, q in enumerate(quad_data):
-    with grid_layout[i]:
-        # 스타일 주입
-        st.markdown(f"""
-            <style>
-                div.q-card-{q['n']} {{ border-color: {q['border']} !important; }}
-                div.q-card-{q['n']} .header-btn button {{ background-color: {q['bg']} !important; color: {q['fg']} !important; border-bottom: 3px solid {q['border']} !important; }}
-            </style>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"<div class='q-card q-card-{q['n']}'>", unsafe_allow_html=True)
-        
-        # 박스 헤더 클릭 시 입력 모드
-        st.markdown("<div class='header-btn'>", unsafe_allow_html=True)
-        if st.button(f"{q['t']}\n{q['desc']}", key=f"head{q['n']}", use_container_width=True):
-            st.session_state.adding_to = q['n']
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # 입력창
-        if st.session_state.adding_to == q['n']:
-            st.markdown("<div class='input-area'>", unsafe_allow_html=True)
-            new_task_input = st.text_input("New task", key=f"in{q['n']}", placeholder="할 일을 입력하고 Enter...", label_visibility="collapsed")
-            btn_s1, btn_s2 = st.columns(2)
-            if btn_s1.button("✅ 저장", key=f"sv{q['n']}", use_container_width=True, type="primary"):
-                add_task(new_task_input, q['n'], selected_date)
-                st.rerun()
-            if btn_s2.button("❌ 취소", key=f"cc{q['n']}", use_container_width=True):
-                st.session_state.adding_to = None
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        # 목록
-        quad_tasks = sorted([t for t in visible_tasks if t['quadrant'] == q['n']], key=lambda x: x['completed'])
-        
-        if not quad_tasks:
-            st.markdown("<div style='padding: 40px 15px; text-align: center; opacity: 0.5;'>", unsafe_allow_html=True)
-            if st.button(f"➕ 항목 추가", key=f"empty_add_{q['n']}", use_container_width=True):
-                st.session_state.adding_to = q['n']
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.markdown("<div style='padding-top: 15px;'></div>", unsafe_allow_html=True)
-            for t in quad_tasks:
-                t_col1, t_col2, t_col3 = st.columns([0.1, 0.8, 0.1])
-                with t_col1:
-                    done_chk = st.checkbox("", value=t['completed'], key=f"chk{t['id']}")
-                    if done_chk != t['completed']:
-                        t['completed'] = done_chk
-                        st.rerun()
-                with t_col2:
-                    is_done_cls = "task-done" if t['completed'] else ""
-                    prefix = "⏳ " if t['date'] < str(selected_date) else ""
-                    st.markdown(f"<div class='task-text {is_done_cls}'>{prefix}{t['text']}</div>", unsafe_allow_html=True)
-                with t_col3:
-                    if st.button("🗑️", key=f"del{t['id']}"):
-                        st.session_state.tasks = [task for task in st.session_state.tasks if task['id'] != t['id']]
-                        st.rerun()
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# 9. 푸터
-st.markdown("<br><hr>", unsafe_allow_html=True)
-f_col1, f_col2 = st.columns([3, 1])
-f_col1.caption(f"Sync: {datetime.now().strftime('%H:%M:%S')}")
-if f_col2.button("⚠️ 데이터 초기화", use_container_width=True):
-    st.session_state.tasks = []
-    st.rerun()
-
-st.markdown("<div style='text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:20px;'>Focus on what matters. Eisenhower Matrix v9.2</div>", unsafe_allow_html=True)
+export default App;
