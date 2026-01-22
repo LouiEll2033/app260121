@@ -45,19 +45,20 @@ if st.session_state.view_mode == "Mobile":
         
         /* 3. Streamlit 내부 기본 간격(Gap) 완전 제거 */
         [data-testid="stVerticalBlock"] { gap: 0rem !important; }
-        [data-testid="stHorizontalBlock"] { gap: 2px !important; margin: 0 !important; padding: 0 !important; }
+        [data-testid="stHorizontalBlock"] { gap: 4px !important; margin: 0 !important; padding: 0 !important; }
         div[data-testid="stVerticalBlockBorderWrapper"] > div > div { gap: 0rem !important; }
         div[data-testid="element-container"] { margin-bottom: 0px !important; }
 
         /* 4. 2x2 그리드 너비 강제 고정 */
         [data-testid="stHorizontalBlock"] [data-testid="column"] {
-            width: calc(50% - 1px) !important;
-            flex: 1 1 calc(50% - 1px) !important;
+            width: calc(50% - 2px) !important;
+            flex: 1 1 calc(50% - 2px) !important;
             min-width: 0 !important;
             max-width: 50% !important;
+            padding: 0 !important;
         }
 
-        /* 5. 사분면 높이 극단적 최적화 (세로 모드 박제의 핵심) */
+        /* 5. 사분면 높이 및 세로 비율 극단적 최적화 */
         .q-header {
             font-weight: 800; padding: 1px 0; border-radius: 4px 4px 0 0;
             font-size: 0.6rem; text-align: center; color: #333;
@@ -67,36 +68,37 @@ if st.session_state.view_mode == "Mobile":
         .quadrant-container {
             border: 1px solid #f1f5f9; border-radius: 0 0 4px 4px;
             padding: 1px; background-color: #fafafa;
-            /* 높이를 더 줄여서 세로 화면에서 상하 2단이 다 보이도록 함 */
-            height: 25vh; 
+            /* 세로 길이를 더 줄여서 여유 공간 확보 (25vh -> 20vh) */
+            height: 22vh; 
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* 6. 텍스트 가독성 유지 및 압축 */
+        /* 6. 텍스트 가독성 및 압축 */
         .stMarkdown div p { font-size: 0.65rem !important; line-height: 1.0 !important; margin: 0 !important; }
         
-        /* 체크박스 영역 최소화 */
+        /* 체크박스 영역 최소화 (가로 압착 완화) */
         div[data-testid="stCheckbox"] { 
             margin-top: -14px !important; 
             margin-bottom: -16px !important; 
-            transform: scale(0.7); 
+            transform: scale(0.65); 
+            width: 16px !important;
         }
         div[data-testid="stCheckbox"] label { display: none !important; }
 
-        /* 버튼 및 팝오버 크기 최소화 */
+        /* 버튼 및 팝오버 크기 최소화 (수직 공간 확보) */
         .stButton>button, div[data-testid="stPopover"] > button {
-            height: 14px !important; 
-            min-height: 14px !important;
+            height: 12px !important; 
+            min-height: 12px !important;
             font-size: 0.5rem !important;
             padding: 0 !important;
             line-height: 1 !important;
             border-radius: 2px !important;
         }
         
-        /* 상단 날짜 입력창 크기 축소 및 여백 제거 */
-        div[data-testid="stDateInput"] { transform: scale(0.7); transform-origin: top right; margin-top: -10px; }
-        h6 { font-size: 0.65rem !important; margin: 0 !important; padding-top: 2px !important; }
+        /* 상단 날짜 입력창 크기 축소 */
+        div[data-testid="stDateInput"] { transform: scale(0.65); transform-origin: top right; margin-top: -12px; }
+        h6 { font-size: 0.6rem !important; margin: 0 !important; padding-top: 2px !important; }
         </style>
         """, unsafe_allow_html=True)
 else:
@@ -163,7 +165,8 @@ for i, q in enumerate(quadrants):
         q_tasks = [t for t in visible_tasks if t['quadrant'] == q['num']]
         
         for task in q_tasks:
-            ratio = [0.25, 0.6, 0.15] if st.session_state.view_mode == "Mobile" else [0.15, 0.7, 0.15]
+            # 비율 조정 (체크박스 너비 최소화하여 텍스트 공간 확보)
+            ratio = [0.15, 0.7, 0.15] if st.session_state.view_mode == "Mobile" else [0.15, 0.7, 0.15]
             t_col1, t_col2, t_col3 = st.columns(ratio)
             
             with t_col1:
