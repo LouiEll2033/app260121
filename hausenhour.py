@@ -43,7 +43,7 @@ if st.session_state.view_mode == "Mobile":
             overflow: hidden !important;
         }
         
-        /* 3. Streamlit 기본 간격(Gap) 완전 제거 */
+        /* 3. Streamlit 내부 기본 간격(Gap) 완전 제거 */
         [data-testid="stVerticalBlock"] { gap: 0rem !important; }
         [data-testid="stHorizontalBlock"] { gap: 2px !important; margin: 0 !important; padding: 0 !important; }
         div[data-testid="stVerticalBlockBorderWrapper"] > div > div { gap: 0rem !important; }
@@ -59,7 +59,7 @@ if st.session_state.view_mode == "Mobile":
 
         /* 5. 사분면 높이 극단적 최적화 (세로 모드 박제의 핵심) */
         .q-header {
-            font-weight: 800; padding: 2px 0; border-radius: 4px 4px 0 0;
+            font-weight: 800; padding: 1px 0; border-radius: 4px 4px 0 0;
             font-size: 0.6rem; text-align: center; color: #333;
             border: 1px solid rgba(0,0,0,0.05); line-height: 1;
         }
@@ -67,8 +67,8 @@ if st.session_state.view_mode == "Mobile":
         .quadrant-container {
             border: 1px solid #f1f5f9; border-radius: 0 0 4px 4px;
             padding: 1px; background-color: #fafafa;
-            /* 높이를 더 줄여서 상단/중간 요소들과의 합이 100%를 안넘게 함 */
-            height: 28vh; 
+            /* 높이를 더 줄여서 세로 화면에서 상하 2단이 다 보이도록 함 */
+            height: 25vh; 
             overflow-y: auto;
             overflow-x: hidden;
         }
