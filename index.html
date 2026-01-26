@@ -1,757 +1,144 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>데미안 한눈에 보기 - 독서모임 미니 웹</title>
-  <style>
-    :root{
-      --bg:#0b0f17;
-      --panel:#121a2a;
-      --panel2:#0f1726;
-      --text:#e8eefc;
-      --muted:#b8c4e6;
-      --accent:#7aa7ff;
-      --accent2:#9d7bff;
-      --ok:#33d6a6;
-      --warn:#ffcc66;
-      --bad:#ff6b6b;
-      --line:rgba(255,255,255,.08);
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius:18px;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", Helvetica, Arial, sans-serif;
-      background: radial-gradient(1200px 700px at 20% 10%, rgba(122,167,255,.20), transparent 55%),
-                  radial-gradient(900px 600px at 80% 20%, rgba(157,123,255,.18), transparent 60%),
-                  linear-gradient(180deg, var(--bg), #070a12);
-      color:var(--text);
-      line-height:1.55;
-    }
-    a{ color:inherit; }
-    .wrap{ max-width:1100px; margin:0 auto; padding:24px; }
-    header{
-      display:grid;
-      gap:14px;
-      padding:22px 18px;
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(18,26,42,.88), rgba(15,23,38,.72));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      position:relative;
-      overflow:hidden;
-    }
-    header:before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(600px 250px at 10% 0%, rgba(122,167,255,.25), transparent 60%),
-                  radial-gradient(480px 220px at 90% 0%, rgba(157,123,255,.22), transparent 65%);
-      pointer-events:none;
-      filter: blur(0px);
-      opacity:.9;
-    }
-    header > *{ position:relative; }
-    .topRow{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-    }
-    .title{
-      display:flex; flex-direction:column; gap:6px;
-    }
-    .title h1{
-      margin:0;
-      font-size: clamp(22px, 3vw, 34px);
-      letter-spacing:-.02em;
-    }
-    .subtitle{
-      color:var(--muted);
-      font-size:14px;
-      margin:0;
-    }
-    .controls{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-    }
-    button, .chip{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      transition:.2s ease;
-      font-size:14px;
-      user-select:none;
-    }
-    button:hover{ transform: translateY(-1px); border-color: rgba(122,167,255,.35); }
-    button:active{ transform: translateY(0px); }
-    .chip{
-      display:flex; align-items:center; gap:8px;
-      padding:10px 12px;
-    }
-    .chip input{ accent-color: var(--accent); }
-    .grid{
-      margin-top:18px;
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:14px;
-    }
-    @media (max-width: 920px){
-      .grid{ grid-template-columns:1fr; }
-    }
-    .card{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(18,26,42,.86), rgba(15,23,38,.70));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:16px;
-    }
-    .card h2, .card h3{
-      margin:0 0 10px 0;
-      letter-spacing:-.01em;
-    }
-    .muted{ color:var(--muted); }
-    .pillRow{
-      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
-    }
-    .pill{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      color: var(--muted);
-    }
-    .kpi{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:10px;
-      margin-top:12px;
-    }
-    @media (max-width: 520px){
-      .kpi{ grid-template-columns:1fr; }
-    }
-    .kpi .box{
-      border:1px solid var(--line);
-      border-radius: 14px;
-      padding:12px;
-      background: rgba(255,255,255,.03);
-    }
-    .kpi .big{
-      font-size:18px;
-      font-weight:700;
-      margin:0 0 4px 0;
-    }
-    .kpi .small{ margin:0; color:var(--muted); font-size:12px; }
-    .tabs{
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin: 10px 0 12px 0;
-    }
-    .tab{
-      border-radius:999px;
-      padding:9px 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      cursor:pointer;
-      font-size:13px;
-      transition:.2s ease;
-    }
-    .tab[aria-selected="true"]{
-      border-color: rgba(122,167,255,.55);
-      background: linear-gradient(90deg, rgba(122,167,255,.16), rgba(157,123,255,.10));
-      color: var(--text);
-    }
-    .panel{
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding:14px;
-      background: rgba(0,0,0,.14);
-    }
-    .list{
-      display:grid; gap:10px;
-    }
-    .item{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      padding:12px;
-      border-radius: 14px;
-    }
-    .item strong{ display:block; margin-bottom:6px; }
-    .hint{
-      font-size:12px;
-      color: var(--muted);
-      margin-top:8px;
-    }
-    .quote{
-      padding:12px;
-      border-left:3px solid rgba(122,167,255,.6);
-      background: rgba(122,167,255,.06);
-      border-radius: 12px;
-      color: var(--muted);
-    }
-    .timeline{
-      display:grid; gap:10px;
-      margin-top:10px;
-    }
-    .step{
-      display:flex; gap:12px;
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(255,255,255,.03);
-      align-items:flex-start;
-    }
-    .dot{
-      width:12px; height:12px; border-radius:50%;
-      margin-top:5px;
-      background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent2));
-      box-shadow: 0 0 0 6px rgba(122,167,255,.10);
-      flex:0 0 auto;
-    }
-    .step .txt{ flex:1; }
-    .step .txt p{ margin:0; color:var(--muted); }
-    .step .txt b{ color: var(--text); }
-    .quizQ{
-      font-weight:700;
-      margin:0 0 10px 0;
-    }
-    .options{
-      display:grid; gap:8px;
-    }
-    .opt{
-      text-align:left;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      padding:10px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      transition:.2s ease;
-    }
-    .opt:hover{ border-color: rgba(122,167,255,.35); transform: translateY(-1px); }
-    .result{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      color: var(--muted);
-      display:none;
-    }
-    .badge{
-      display:inline-flex; align-items:center; gap:6px;
-      border-radius:999px; padding:6px 10px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      font-size:12px; color:var(--muted);
-    }
-    .badge .bDot{
-      width:8px; height:8px; border-radius:50%;
-      background: var(--accent);
-    }
-    .footer{
-      margin:14px 0 4px 0;
-      color: rgba(232,238,252,.65);
-      font-size:12px;
-      text-align:center;
-    }
-    .smallBtn{
-      padding:8px 10px;
-      font-size:12px;
-    }
-    .divider{
-      height:1px;
-      background: var(--line);
-      margin:12px 0;
-    }
-    .highlight{
-      background: linear-gradient(90deg, rgba(122,167,255,.12), rgba(157,123,255,.08));
-      border:1px solid rgba(122,167,255,.18);
-      padding: 2px 8px;
-      border-radius: 999px;
-      display:inline-block;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>데미안 – 깊이 생각하는 시간</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:#111;
+  color:#eee;
+}
+.app{
+  max-width:480px;
+  margin:0 auto;
+  padding:24px;
+}
+h1{
+  font-size:24px;
+  margin-bottom:8px;
+}
+.sub{
+  font-size:15px;
+  color:#aaa;
+  margin-bottom:22px;
+}
+.card{
+  background:#1b1b1b;
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:18px;
+}
+button{
+  width:100%;
+  padding:18px;
+  border-radius:14px;
+  border:none;
+  background:#c7b38c;
+  color:#000;
+  font-size:17px;
+  font-weight:600;
+}
+.question{
+  font-size:20px;
+  line-height:1.6;
+  margin-bottom:16px;
+}
+textarea{
+  width:100%;
+  height:120px;
+  border-radius:12px;
+  border:none;
+  padding:14px;
+  font-size:16px;
+  background:#0e0e0e;
+  color:#fff;
+}
+.hint{
+  font-size:14px;
+  color:#888;
+  margin-top:14px;
+  line-height:1.5;
+}
+.symbol{
+  font-size:15px;
+  color:#c7b38c;
+  line-height:1.6;
+}
+.footer{
+  font-size:13px;
+  color:#777;
+  text-align:center;
+  margin-top:22px;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="topRow">
-        <div class="title">
-          <h1>데미안, 어렵지 않게: “나를 찾는 이야기”</h1>
-          <p class="subtitle">독서모임에서 바로 써먹는 핵심 주제 · 상징 · 질문 · 미니 퀴즈</p>
-        </div>
-        <div class="controls">
-          <button id="btnRandom" title="독서모임 질문 랜덤 뽑기">질문 뽑기 🎲</button>
-          <button id="btnReset" class="smallBtn" title="기본 화면으로">초기화</button>
-          <label class="chip" title="핵심 단어를 더 강조해서 보여줘요">
-            <input id="toggleEasy" type="checkbox" checked />
-            쉬운 설명 모드
-          </label>
-        </div>
-      </div>
+<div class="app">
+  <h1>🜂 데미안, 깊이 생각하는 시간</h1>
+  <div class="sub">답하지 않아도 괜찮은 질문들</div>
 
-      <div class="kpi" aria-label="한눈에 핵심">
-        <div class="box">
-          <p class="big">핵심 한 줄</p>
-          <p class="small">“남이 정해준 ‘착한 나’에서 벗어나, 진짜 나를 살아가는 성장기”</p>
-        </div>
-        <div class="box">
-          <p class="big">가장 중요한 갈림길</p>
-          <p class="small"><span class="highlight">두 세계</span>(밝음/어둠)을 ‘갈라’ 보지 않고, 내 안에서 통합하기</p>
-        </div>
-        <div class="box">
-          <p class="big">읽는 키워드</p>
-          <p class="small">자기 발견 · 통합 · 용기 · 상징(알/새) · “내면의 소리”</p>
-        </div>
-      </div>
+  <div class="card">
+    <button onclick="newQuestion()">질문 하나 열기</button>
+  </div>
 
-      <div class="pillRow" aria-label="핵심 태그">
-        <span class="pill">#자기_발견</span>
-        <span class="pill">#선악을_넘어</span>
-        <span class="pill">#통합</span>
-        <span class="pill">#성장_통과의례</span>
-        <span class="pill">#상징_읽기</span>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- LEFT MAIN -->
-      <section class="card" aria-label="핵심 이해">
-        <h2>1) 데미안이 ‘심오하게’ 느껴지는 이유를 쉽게 풀면</h2>
-        <div class="panel">
-          <div class="quote">
-            <b>포인트:</b> 이 소설은 “사건”보다 “내면의 변화”가 주인공이에요.  
-            그래서 <span class="highlight">상징</span>과 <span class="highlight">감정의 방향</span>을 잡으면 훨씬 쉬워집니다.
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="tabs" role="tablist" aria-label="주제 탭">
-            <button class="tab" role="tab" aria-selected="true" data-tab="tab-1">두 세계</button>
-            <button class="tab" role="tab" aria-selected="false" data-tab="tab-2">알과 새</button>
-            <button class="tab" role="tab" aria-selected="false" data-tab="tab-3">아브락사스</button>
-            <button class="tab" role="tab" aria-selected="false" data-tab="tab-4">‘데미안’의 역할</button>
-          </div>
-
-          <div id="tab-1" class="panel tabPanel" role="tabpanel">
-            <h3>두 세계(밝음/어둠): “선한 척”만 하던 나에서 벗어나기</h3>
-            <div class="list">
-              <div class="item">
-                <strong>쉽게 말하면</strong>
-                <div class="muted">
-                  우리는 어릴 때 “착하면 칭찬”을 받죠. 그런데 마음속에는 질투, 분노, 욕심도 있어요.  
-                  『데미안』은 “그런 나를 숨기기만 하면 결국 더 불행해진다”는 쪽으로 가요.
-                </div>
-              </div>
-              <div class="item">
-                <strong>중요한 관점</strong>
-                <div class="muted">
-                  “어둠 = 나쁜 사람”이 아니라, <span class="highlight">내 안의 진짜 감정과 욕구</span>를 뜻할 때가 많아요.  
-                  그걸 인정하고 다루는 게 성장이죠.
-                </div>
-              </div>
-              <div class="item">
-                <strong>독서모임용 질문</strong>
-                <div class="muted">내가 ‘좋은 사람이어야 한다’는 이미지 때문에 숨겨온 감정은 뭐였을까?</div>
-              </div>
-            </div>
-            <p class="hint">팁: “선/악”보다 “진짜/가짜”, “통합/분열”로 읽으면 편해요.</p>
-          </div>
-
-          <div id="tab-2" class="panel tabPanel" role="tabpanel" hidden>
-            <h3>알과 새: 깨고 나오는 고통은 “탄생의 통증”</h3>
-            <div class="list">
-              <div class="item">
-                <strong>알 = 안전한 세계</strong>
-                <div class="muted">가족·학교·규칙·평가 같은 익숙한 틀. 편하지만 나를 규정해요.</div>
-              </div>
-              <div class="item">
-                <strong>껍질을 깨는 고통 = 성장이 아픈 이유</strong>
-                <div class="muted">새로운 내가 되려면, 예전의 ‘정답 같은 나’를 떠나야 하니까요.</div>
-              </div>
-              <div class="item">
-                <strong>새 = 스스로 선택하는 삶</strong>
-                <div class="muted">남의 기준이 아니라, 내 기준으로 살아보려는 첫 비행.</div>
-              </div>
-            </div>
-            <p class="hint">독서모임 포인트: “지금 내 삶에서 ‘알’은 무엇일까?”를 각자 말해보면 좋아요.</p>
-          </div>
-
-          <div id="tab-3" class="panel tabPanel" role="tabpanel" hidden>
-            <h3>아브락사스: “선과 악을 동시에 품는 더 큰 세계”</h3>
-            <div class="list">
-              <div class="item">
-                <strong>쉽게 말하면</strong>
-                <div class="muted">
-                  흑백논리(좋음/나쁨)만으로는 내 삶을 설명하기 어려워요.  
-                  인간은 복잡하고, 성장에는 어두운 면을 ‘관리’하는 용기도 필요하죠.
-                </div>
-              </div>
-              <div class="item">
-                <strong>오해 방지</strong>
-                <div class="muted">
-                  “악을 해도 된다”가 아니라, <span class="highlight">내 안의 어둠을 인정하고 책임 있게 다룬다</span>에 가까워요.
-                </div>
-              </div>
-              <div class="item">
-                <strong>독서모임용 질문</strong>
-                <div class="muted">나는 어떤 순간에 ‘세상을 흑백으로’ 나눠서 편해지려 했을까?</div>
-              </div>
-            </div>
-          </div>
-
-          <div id="tab-4" class="panel tabPanel" role="tabpanel" hidden>
-            <h3>‘데미안’은 누구인가: 인물이라기보다 “내 안의 안내자”</h3>
-            <div class="list">
-              <div class="item">
-                <strong>데미안 = 외부 멘토 + 내면의 목소리</strong>
-                <div class="muted">
-                  현실에서의 친구이기도 하지만, 상징적으로는 “네가 진짜 원하는 길을 보라”고 말하는 존재처럼 읽혀요.
-                </div>
-              </div>
-              <div class="item">
-                <strong>싱클레어 = 우리 모두</strong>
-                <div class="muted">흔들리고, 죄책감도 느끼고, 그래도 나를 찾아가는 사람.</div>
-              </div>
-              <div class="item">
-                <strong>독서모임용 질문</strong>
-                <div class="muted">내 인생에서 ‘데미안 같은 말’을 해준 사람(또는 계기)은 있었나?</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:14px" class="panel">
-          <h2 style="margin-bottom:8px;">2) 이야기 흐름을 “성장 단계”로 요약</h2>
-          <div class="timeline" aria-label="성장 타임라인">
-            <div class="step">
-              <div class="dot" aria-hidden="true"></div>
-              <div class="txt">
-                <b>1단계: 안전한 세계</b>
-                <p>‘좋은 아이’로 살며 안정감을 얻지만, 내면의 갈등이 시작됨.</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="dot" aria-hidden="true"></div>
-              <div class="txt">
-                <b>2단계: 균열과 혼란</b>
-                <p>두려움·죄책감·유혹이 뒤섞이며 “나는 누구지?”가 커짐.</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="dot" aria-hidden="true"></div>
-              <div class="txt">
-                <b>3단계: 상징을 통해 이해</b>
-                <p>알/새, 두 세계 같은 상징으로 ‘내 문제의 구조’를 보기 시작.</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="dot" aria-hidden="true"></div>
-              <div class="txt">
-                <b>4단계: 통합의 용기</b>
-                <p>밝은 나/어두운 나를 부정하지 않고 ‘책임 있게’ 함께 다루려 함.</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="dot" aria-hidden="true"></div>
-              <div class="txt">
-                <b>5단계: 나만의 길</b>
-                <p>정답이 아니라 ‘나의 방향’을 선택해 살아가려는 태도.</p>
-              </div>
-            </div>
-          </div>
-          <p class="hint">독서모임 진행 팁: 각자 “내가 지금 몇 단계쯤?”을 공유하면 대화가 깊어져요.</p>
-        </div>
-      </section>
-
-      <!-- RIGHT SIDEBAR -->
-      <aside class="card" aria-label="독서모임 도구">
-        <h2>독서모임 도구</h2>
-
-        <div class="panel">
-          <h3 style="margin-bottom:8px;">A) 랜덤 질문 카드</h3>
-          <div class="item">
-            <strong id="qTitle">버튼을 눌러 질문을 뽑아보세요</strong>
-            <div id="qBody" class="muted">“말하기 쉬운 질문 → 더 깊은 질문” 순으로 점점 확장해도 좋아요.</div>
-            <div class="divider"></div>
-            <div class="badge" title="대화 깊이 레벨">
-              <span class="bDot" id="depthDot"></span>
-              <span id="depthText">Depth: -</span>
-            </div>
-          </div>
-          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-            <button id="btnNextQ" class="smallBtn">다음 질문</button>
-            <button id="btnCopyQ" class="smallBtn">질문 복사</button>
-          </div>
-          <p class="hint">팁: “내 경험 1개 + 느낀 감정 1개 + 앞으로의 행동 1개”로 답하면 정리돼요.</p>
-        </div>
-
-        <div style="margin-top:14px" class="panel">
-          <h3 style="margin-bottom:8px;">B) 1분 미니 퀴즈 (재미로!)</h3>
-          <p class="quizQ" id="quizQ">퀴즈 로딩 중…</p>
-          <div class="options" id="quizOptions"></div>
-          <div class="result" id="quizResult"></div>
-          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-            <button id="btnNewQuiz" class="smallBtn">다른 문제</button>
-            <button id="btnReveal" class="smallBtn">해설 보기</button>
-          </div>
-          <p class="hint">퀴즈는 “상징을 어떤 방향으로 읽을지” 감을 잡는 용도예요.</p>
-        </div>
-
-        <div style="margin-top:14px" class="panel">
-          <h3 style="margin-bottom:8px;">C) 오늘의 한 문장 정리</h3>
-          <div class="item">
-            <strong>한 줄 요약 생성기</strong>
-            <div class="muted">아래 버튼을 누르면, 『데미안』 메시지를 한 줄로 바꿔줘요.</div>
-            <div class="divider"></div>
-            <div id="oneLine" class="muted">—</div>
-            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-              <button id="btnOneLine" class="smallBtn">한 줄 만들기</button>
-              <button id="btnCopyOneLine" class="smallBtn">복사</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">
-          ※ 저작권 보호를 위해 작품 문장을 길게 그대로 인용하지 않고, 핵심을 ‘설명’ 형태로 구성했어요.
-        </div>
-      </aside>
+  <div class="card" id="qCard" style="display:none;">
+    <div class="question" id="question"></div>
+    <textarea placeholder="생각이 멈춰도 괜찮습니다."></textarea>
+    <div class="hint">
+      ※ 설명하지 않아도 됩니다.<br>
+      ※ 말이 막히면, 그 침묵도 하나의 답입니다.
     </div>
   </div>
 
-  <script>
-    // ===== Tabs =====
-    const tabs = document.querySelectorAll(".tab");
-    const panels = document.querySelectorAll(".tabPanel");
-    tabs.forEach(t => {
-      t.addEventListener("click", () => {
-        tabs.forEach(x => x.setAttribute("aria-selected", "false"));
-        t.setAttribute("aria-selected", "true");
-        const target = t.dataset.tab;
-        panels.forEach(p => {
-          p.hidden = (p.id !== target);
-        });
-      });
-    });
+  <div class="card" id="symbolCard" style="display:none;">
+    <div class="symbol" id="symbol"></div>
+  </div>
 
-    // ===== Easy Mode Toggle =====
-    const toggleEasy = document.getElementById("toggleEasy");
-    toggleEasy.addEventListener("change", () => {
-      document.body.dataset.easy = toggleEasy.checked ? "on" : "off";
-      // 간단히: 쉬운 모드 OFF면 힌트/강조 일부를 줄이기
-      document.querySelectorAll(".hint").forEach(el => {
-        el.style.display = toggleEasy.checked ? "block" : "none";
-      });
-      document.querySelectorAll(".highlight").forEach(el => {
-        el.style.opacity = toggleEasy.checked ? "1" : ".75";
-      });
-    });
-    // init
-    toggleEasy.dispatchEvent(new Event("change"));
+  <div class="footer">
+    데미안은 이해하는 책이 아니라,<br>
+    나를 마주보게 하는 책입니다.
+  </div>
+</div>
 
-    // ===== Random Question Cards =====
-    const questions = [
-      { depth: 1, title: "내가 공감한 장면(또는 분위기)은?", body: "줄거리보다 ‘왜 그 장면이 남았는지’를 말해보면 더 깊어져요." },
-      { depth: 1, title: "싱클레어의 흔들림이 내 경험과 닮은 점은?", body: "‘좋은 사람’ 이미지 때문에 숨겼던 감정이 있었나요?" },
-      { depth: 2, title: "내 삶의 ‘두 세계(밝음/어둠)’는 어떻게 나뉘어 있나?", body: "어떤 순간에 나는 ‘완벽한 나’만 보여주려 했을까요?" },
-      { depth: 2, title: "‘알’은 지금 내 삶에서 무엇인가?", body: "안전하지만 답답한 틀(관계/일/역할/기대)은 무엇인가요?" },
-      { depth: 3, title: "나는 어떤 가치관 때문에 스스로를 판단해 왔나?", body: "그 가치관은 ‘나의 것’이었나요, ‘누군가의 기대’였나요?" },
-      { depth: 3, title: "어둠을 인정한다는 건 구체적으로 어떤 행동일까?", body: "감정을 인정하되, 책임 있게 다루는 방법을 예로 들어보세요." },
-      { depth: 4, title: "내면의 목소리를 듣는다는 건 어떤 느낌인가?", body: "‘조용하지만 확실한 방향감’이 있었던 순간을 떠올려보세요." },
-      { depth: 4, title: "나는 지금 ‘통합’이 필요한가, ‘결단’이 필요한가?", body: "두 갈래를 모두 인정하면서도, 결국 선택은 해야 하잖아요." }
-    ];
-    let qIndex = -1;
+<script>
+const questions = [
+{
+ q:"나는 나 자신으로 살았던 시간이 더 많았을까, 역할로 살았던 시간이 더 많았을까?",
+ s:"👉 데미안은 ‘어떤 사람이 될 것인가’보다 ‘어떤 존재로 남을 것인가’를 묻습니다."
+},
+{
+ q:"선한 사람으로 보이는 삶과, 진실한 사람으로 사는 삶 중 나는 무엇을 선택해 왔을까?",
+ s:"👉 아브락사스는 선과 악 이전의 ‘있는 그대로의 나’를 상징합니다."
+},
+{
+ q:"나를 가장 오래 보호해 준 것은 무엇이며, 동시에 무엇을 막아왔을까?",
+ s:"👉 알은 안전이지만, 영원한 집은 아닙니다."
+},
+{
+ q:"지금의 나는 자유로운가, 아니면 더 이상 증명하지 않아도 되어서 조용해진 것일까?",
+ s:"👉 침묵은 자유일 수도, 체념일 수도 있습니다."
+},
+{
+ q:"내 인생에서 끝내 이해되지 않는 선택 하나가 있다면, 그것을 나는 아직 붙잡고 있는가?",
+ s:"👉 이해되지 않는 것을 내려놓는 것도 하나의 통합입니다."
+},
+{
+ q:"오늘의 내가 젊은 시절의 나를 만난다면, 나는 그를 바꾸려 할까, 안아주려 할까?",
+ s:"👉 데미안의 성장은 바뀜이 아니라 ‘수용’에 가깝습니다."
+}
+];
 
-    const qTitle = document.getElementById("qTitle");
-    const qBody = document.getElementById("qBody");
-    const depthText = document.getElementById("depthText");
-    const depthDot = document.getElementById("depthDot");
-
-    function depthColor(d){
-      if (d <= 1) return "var(--ok)";
-      if (d === 2) return "var(--accent)";
-      if (d === 3) return "var(--warn)";
-      return "var(--bad)";
-    }
-
-    function nextQuestion(random=true){
-      if (random){
-        let next = Math.floor(Math.random() * questions.length);
-        if (questions.length > 1 && next === qIndex){
-          next = (next + 1) % questions.length;
-        }
-        qIndex = next;
-      } else {
-        qIndex = (qIndex + 1) % questions.length;
-      }
-      const q = questions[qIndex];
-      qTitle.textContent = q.title;
-      qBody.textContent = q.body;
-      depthText.textContent = `Depth: ${q.depth}`;
-      depthDot.style.background = depthColor(q.depth);
-    }
-
-    document.getElementById("btnRandom").addEventListener("click", () => nextQuestion(true));
-    document.getElementById("btnNextQ").addEventListener("click", () => nextQuestion(false));
-    document.getElementById("btnCopyQ").addEventListener("click", async () => {
-      const text = `데미안 질문: ${qTitle.textContent}\n- ${qBody.textContent}`;
-      try{
-        await navigator.clipboard.writeText(text);
-        toast("질문이 복사됐어요!");
-      } catch(e){
-        toast("복사 권한이 없어요. 수동으로 복사해 주세요.");
-      }
-    });
-
-    // ===== Quiz =====
-    const quizzes = [
-      {
-        q: "『데미안』에서 ‘알과 새’ 상징이 가장 가깝게 말하는 것은?",
-        options: [
-          "안전한 틀을 깨고 ‘새로운 나’로 태어나는 과정",
-          "남을 이기기 위해 더 강해지는 경쟁의 논리",
-          "규칙을 지키면 언제나 행복해진다는 믿음",
-          "성공을 위해 감정을 없애는 훈련"
-        ],
-        answer: 0,
-        explain: "‘알’은 익숙한 세계, ‘새’는 스스로 선택하는 삶을 향한 탄생의 이미지로 읽을 수 있어요."
-      },
-      {
-        q: "‘두 세계’(밝음/어둠)라는 말이 던지는 질문으로 가장 적절한 것은?",
-        options: [
-          "좋은 사람만이 가치 있는가?",
-          "내 안의 복잡한 면을 인정하고 통합할 수 있는가?",
-          "남의 평가를 더 많이 받는 법은?",
-          "감정을 숨길수록 더 성숙해지는가?"
-        ],
-        answer: 1,
-        explain: "핵심은 흑백으로 나누기보다, 내 안의 다양한 면을 ‘책임 있게’ 함께 다루는 태도예요."
-      },
-      {
-        q: "『데미안』을 읽을 때 ‘줄거리’보다 ‘상징’이 중요한 이유는?",
-        options: [
-          "작가가 사건을 일부러 없앴기 때문",
-          "이야기의 중심이 외부 사건보다 내면의 변화이기 때문",
-          "상징은 정답이 하나뿐이라 쉬워서",
-          "등장인물이 너무 많아서"
-        ],
-        answer: 1,
-        explain: "이 작품은 ‘내면 성장기’라서, 상징을 통해 변화의 방향을 잡으면 이해가 쉬워져요."
-      }
-    ];
-
-    let currentQuiz = null;
-    let revealed = false;
-
-    const quizQ = document.getElementById("quizQ");
-    const quizOptions = document.getElementById("quizOptions");
-    const quizResult = document.getElementById("quizResult");
-
-    function loadQuiz(){
-      revealed = false;
-      quizResult.style.display = "none";
-      quizResult.textContent = "";
-      const idx = Math.floor(Math.random() * quizzes.length);
-      currentQuiz = quizzes[idx];
-      quizQ.textContent = currentQuiz.q;
-      quizOptions.innerHTML = "";
-      currentQuiz.options.forEach((opt, i) => {
-        const btn = document.createElement("button");
-        btn.className = "opt";
-        btn.type = "button";
-        btn.textContent = opt;
-        btn.addEventListener("click", () => answerQuiz(i));
-        quizOptions.appendChild(btn);
-      });
-    }
-
-    function answerQuiz(i){
-      const correct = (i === currentQuiz.answer);
-      quizResult.style.display = "block";
-      quizResult.textContent = correct ? "✅ 정답! 해설을 눌러 의미를 더 잡아보세요." : "❗ 아쉽지만 괜찮아요. 해설을 눌러 상징의 방향을 확인해요.";
-      quizResult.style.borderColor = correct ? "rgba(51,214,166,.35)" : "rgba(255,107,107,.35)";
-    }
-
-    document.getElementById("btnNewQuiz").addEventListener("click", loadQuiz);
-    document.getElementById("btnReveal").addEventListener("click", () => {
-      if(!currentQuiz) return;
-      quizResult.style.display = "block";
-      quizResult.textContent = "해설: " + currentQuiz.explain;
-      quizResult.style.borderColor = "rgba(122,167,255,.35)";
-      revealed = true;
-    });
-
-    // ===== One-liner generator =====
-    const oneLines = [
-      "나는 남의 기준이 아닌, 내 안의 목소리에 책임 있게 대답하며 살아가고 싶다.",
-      "안전한 ‘알’ 속에 머무르지 않고, 흔들리더라도 나의 길을 선택하는 용기를 갖겠다.",
-      "밝은 나와 어두운 나를 부정하지 않고 통합하며, 더 진짜인 삶으로 나아가겠다.",
-      "내가 두려워하던 내 모습까지 인정할 때, 비로소 성장이 시작된다는 걸 기억하겠다."
-    ];
-    const oneLineEl = document.getElementById("oneLine");
-    document.getElementById("btnOneLine").addEventListener("click", () => {
-      const text = oneLines[Math.floor(Math.random()*oneLines.length)];
-      oneLineEl.textContent = text;
-    });
-    document.getElementById("btnCopyOneLine").addEventListener("click", async () => {
-      const text = oneLineEl.textContent.trim();
-      if(!text || text === "—") return toast("먼저 한 줄 만들기를 눌러주세요!");
-      try{
-        await navigator.clipboard.writeText(text);
-        toast("한 줄이 복사됐어요!");
-      } catch(e){
-        toast("복사 권한이 없어요. 수동으로 복사해 주세요.");
-      }
-    });
-
-    // ===== Reset =====
-    document.getElementById("btnReset").addEventListener("click", () => {
-      // reset tab to first
-      tabs.forEach((x, i) => x.setAttribute("aria-selected", i===0 ? "true":"false"));
-      panels.forEach((p, i) => p.hidden = i!==0);
-      // reset question
-      qIndex = -1;
-      qTitle.textContent = "버튼을 눌러 질문을 뽑아보세요";
-      qBody.textContent = "“말하기 쉬운 질문 → 더 깊은 질문” 순으로 점점 확장해도 좋아요.";
-      depthText.textContent = "Depth: -";
-      depthDot.style.background = "var(--accent)";
-      // reset one line
-      oneLineEl.textContent = "—";
-      // reload quiz
-      loadQuiz();
-      // easy mode stays as is
-      toast("초기화했어요!");
-    });
-
-    // ===== Tiny toast =====
-    const toastEl = document.createElement("div");
-    toastEl.style.position = "fixed";
-    toastEl.style.left = "50%";
-    toastEl.style.bottom = "18px";
-    toastEl.style.transform = "translateX(-50%)";
-    toastEl.style.background = "rgba(0,0,0,.55)";
-    toastEl.style.border = "1px solid rgba(255,255,255,.10)";
-    toastEl.style.color = "rgba(232,238,252,.92)";
-    toastEl.style.padding = "10px 12px";
-    toastEl.style.borderRadius = "999px";
-    toastEl.style.backdropFilter = "blur(8px)";
-    toastEl.style.boxShadow = "0 12px 30px rgba(0,0,0,.35)";
-    toastEl.style.fontSize = "13px";
-    toastEl.style.opacity = "0";
-    toastEl.style.pointerEvents = "none";
-    toastEl.style.transition = ".25s ease";
-    document.body.appendChild(toastEl);
-
-    let toastTimer = null;
-    function toast(msg){
-      toastEl.textContent = msg;
-      toastEl.style.opacity = "1";
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=> toastEl.style.opacity="0", 1400);
-    }
-
-    // init
-    loadQuiz();
-  </script>
+function newQuestion(){
+ const r = questions[Math.floor(Math.random()*questions.length)];
+ document.getElementById("qCard").style.display="block";
+ document.getElementById("symbolCard").style.display="block";
+ document.getElementById("question").innerText = r.q;
+ document.getElementById("symbol").innerText = r.s;
+}
+</script>
 </body>
 </html>
