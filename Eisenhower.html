@@ -1,0 +1,129 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Check } from 'lucide-react';
+
+const EisenhowerMatrix = () => {
+  const [tasks, setTasks] = useState([]);
+  const [showInput, setShowInput] = useState(null);
+  const [newTask, setNewTask] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('eisenhower-tasks');
+    if (saved) {
+      setTasks(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const quadrants = [
+    { id: 'urgent-important', title: '중요하고 긴급한 일', subtitle: '오늘 반드시 처리해야 하는 일', color: 'bg-red-100 border-red-300' },
+    { id: 'not-urgent-important', title: '중요하지만 긴급하지 않은 일', subtitle: '성장과 변화를 만드는 일', color: 'bg-green-100 border-green-300' },
+    { id: 'urgent-not-important', title: '긴급하지만 중요하지 않은 일', subtitle: '위임하거나 자동화할 수 있는 일', color: 'bg-yellow-100 border-yellow-300' },
+    { id: 'not-urgent-not-important', title: '중요하지도, 긴급하지도 않은 일', subtitle: '과감히 줄이거나 없애야 하는 일', color: 'bg-gray-100 border-gray-300' }
+  ];
+
+  const addTask = (quadrantId) => {
+    if (newTask.trim()) {
+      setTasks([...tasks, { id: Date.now(), text: newTask, quadrant: quadrantId, completed: false }]);
+      setNewTask('');
+      setShowInput(null);
+    }
+  };
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  const toggleComplete = (id) => {
+    setTasks(tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">아이젠하워 매트릭스</h1>
+        <p className="text-center text-gray-600 mb-6 text-sm">중요도와 긴급도로 할 일을 관리하세요</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {quadrants.map(quadrant => (
+            <div key={quadrant.id} className={`${quadrant.color} border-2 rounded-lg p-4 shadow-md`}>
+              <h2 className="font-bold text-lg mb-1">{quadrant.title}</h2>
+              <p className="text-sm text-gray-600 mb-3">{quadrant.subtitle}</p>
+              
+              <div className="space-y-2 mb-3">
+                {tasks
+                  .filter(task => task.quadrant === quadrant.id)
+                  .map(task => (
+                    <div key={task.id} className="bg-white rounded p-3 shadow-sm flex items-center gap-2">
+                      <button 
+                        onClick={() => toggleComplete(task.id)}
+                        className="flex-shrink-0"
+                      >
+                        {task.completed ? (
+                          <Check className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <div className="w-5 h-5 border-2 border-gray-300 rounded" />
+                        )}
+                      </button>
+                      <span className={`flex-1 text-sm ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                        {task.text}
+                      </span>
+                      <button 
+                        onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700 flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+
+              {showInput === quadrant.id ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addTask(quadrant.id)}
+                    placeholder="할 일 입력..."
+                    className="flex-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => addTask(quadrant.id)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+                  >
+                    추가
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowInput(null);
+                      setNewTask('');
+                    }}
+                    className="bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowInput(quadrant.id)}
+                  className="w-full bg-white border-2 border-dashed border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:border-gray-400 hover:bg-gray-50 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm">할 일 추가</span>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EisenhowerMatrix;
