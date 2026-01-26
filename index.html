@@ -1,144 +1,320 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>데미안 – 깊이 생각하는 시간</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body{
-  margin:0;
-  font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-  background:#111;
-  color:#eee;
-}
-.app{
-  max-width:480px;
-  margin:0 auto;
-  padding:24px;
-}
-h1{
-  font-size:24px;
-  margin-bottom:8px;
-}
-.sub{
-  font-size:15px;
-  color:#aaa;
-  margin-bottom:22px;
-}
-.card{
-  background:#1b1b1b;
-  border-radius:18px;
-  padding:22px;
-  margin-bottom:18px;
-}
-button{
-  width:100%;
-  padding:18px;
-  border-radius:14px;
-  border:none;
-  background:#c7b38c;
-  color:#000;
-  font-size:17px;
-  font-weight:600;
-}
-.question{
-  font-size:20px;
-  line-height:1.6;
-  margin-bottom:16px;
-}
-textarea{
-  width:100%;
-  height:120px;
-  border-radius:12px;
-  border:none;
-  padding:14px;
-  font-size:16px;
-  background:#0e0e0e;
-  color:#fff;
-}
-.hint{
-  font-size:14px;
-  color:#888;
-  margin-top:14px;
-  line-height:1.5;
-}
-.symbol{
-  font-size:15px;
-  color:#c7b38c;
-  line-height:1.6;
-}
-.footer{
-  font-size:13px;
-  color:#777;
-  text-align:center;
-  margin-top:22px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데미안 독서모임 토론 활동지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif KR', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #f0a500;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #b0b0b0;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f0a500 0%, #e67e22 100%);
+            color: #1a1a2e;
+            box-shadow: 0 4px 15px rgba(240, 165, 0, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 165, 0, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quote {
+            font-size: 1.3em;
+            line-height: 1.8;
+            color: #f0a500;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(240, 165, 0, 0.1);
+            border-left: 4px solid #f0a500;
+            border-radius: 10px;
+            font-style: italic;
+        }
+
+        .question {
+            font-size: 1.2em;
+            line-height: 1.7;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .theme {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(230, 126, 34, 0.2);
+            color: #e67e22;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            border: 1px solid rgba(230, 126, 34, 0.3);
+        }
+
+        .notes {
+            margin-top: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            font-size: 1em;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e0e0e0;
+            font-family: 'Noto Serif KR', serif;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #f0a500;
+        }
+
+        textarea::placeholder {
+            color: #888;
+        }
+
+        .progress {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #b0b0b0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f0a500 0%, #e67e22 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-
 <body>
-<div class="app">
-  <h1>🜂 데미안, 깊이 생각하는 시간</h1>
-  <div class="sub">답하지 않아도 괜찮은 질문들</div>
+    <div class="container">
+        <header>
+            <h1>📖 데미안 독서모임</h1>
+            <p class="subtitle">헤르만 헤세와 함께하는 철학적 탐구</p>
+        </header>
 
-  <div class="card">
-    <button onclick="newQuestion()">질문 하나 열기</button>
-  </div>
+        <div class="controls">
+            <button onclick="previousQuestion()">← 이전 질문</button>
+            <button onclick="nextQuestion()">다음 질문 →</button>
+            <button onclick="randomQuestion()">🎲 랜덤 질문</button>
+        </div>
 
-  <div class="card" id="qCard" style="display:none;">
-    <div class="question" id="question"></div>
-    <textarea placeholder="생각이 멈춰도 괜찮습니다."></textarea>
-    <div class="hint">
-      ※ 설명하지 않아도 됩니다.<br>
-      ※ 말이 막히면, 그 침묵도 하나의 답입니다.
+        <div class="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <p id="progressText"></p>
+        </div>
+
+        <div id="questionCard" class="card"></div>
     </div>
-  </div>
 
-  <div class="card" id="symbolCard" style="display:none;">
-    <div class="symbol" id="symbol"></div>
-  </div>
+    <script>
+        const questions = [
+            {
+                theme: "정체성과 자아발견",
+                quote: "새는 알에서 나오려고 투쟁한다. 알은 세계이다. 태어나려는 자는 하나의 세계를 깨뜨려야 한다.",
+                question: "당신의 인생에서 '알'을 깨뜨려야 했던 순간은 언제였습니까? 그 과정에서 무엇을 잃고 무엇을 얻었나요?"
+            },
+            {
+                theme: "선과 악의 이중성",
+                quote: "나는 선한 것과 악한 것, 밝은 것과 어두운 것 둘 다를 숭배하고 싶었다.",
+                question: "우리 안의 어둠을 인정하는 것이 왜 중요할까요? 도덕적 완벽함을 추구하는 것과 어떻게 다른가요?"
+            },
+            {
+                theme: "운명과 자유의지",
+                quote: "각자가 자기 자신이 되려고 노력하는 것, 그것이 자연이 우리에게 부과한 과제다.",
+                question: "자기 자신이 된다는 것은 구체적으로 무엇을 의미할까요? 사회적 역할과 진정한 자아는 어떻게 조화를 이룰 수 있을까요?"
+            },
+            {
+                theme: "멘토와 성장",
+                quote: "나는 당신에게 선생도 아니고 애인도 아니오. 당신은 나를 사랑하고 거기에서 무언가를 배우고 있소.",
+                question: "진정한 멘토의 역할은 무엇일까요? 의존적 관계와 성장을 돕는 관계의 차이는 무엇인가요?"
+            },
+            {
+                theme: "고독과 개성",
+                quote: "외로움을 두려워하지 않는 사람만이 자유롭다.",
+                question: "현대 사회에서 고독을 선택한다는 것의 의미는 무엇일까요? 연결과 고독 사이에서 어떤 균형을 찾아야 할까요?"
+            },
+            {
+                theme: "죄와 양심",
+                quote: "나는 선생님이 가르쳐 준 것과는 다른 신을 숭배하고 싶었습니다. 그 신은 악마도 포함하고 있습니다.",
+                question: "전통적 도덕과 개인의 양심이 충돌할 때, 우리는 어떤 기준으로 판단해야 할까요?"
+            },
+            {
+                theme: "꿈과 무의식",
+                quote: "꿈은 금지된 욕망의 왕국으로 통하는 문이다.",
+                question: "우리의 무의식과 꿈이 전하는 메시지를 어떻게 해석하고 삶에 통합할 수 있을까요?"
+            },
+            {
+                theme: "사랑과 집착",
+                quote: "나는 베아트리체를 소유할 수 없었다. 하지만 그녀는 나를 별처럼 인도했다.",
+                question: "소유하지 않는 사랑이란 무엇일까요? 진정한 사랑과 집착을 어떻게 구별할 수 있나요?"
+            },
+            {
+                theme: "변화와 성장",
+                quote: "우리는 한 인간으로서가 아니라 하나의 세계로서, 하나의 우주로서 살고 있다.",
+                question: "자신 안의 다양한 자아들을 인정하고 통합하는 것이 왜 중요할까요? 이것이 성숙과 어떤 관련이 있나요?"
+            },
+            {
+                theme: "진리 탐구",
+                quote: "진리는 살아야 하는 것이지, 가르침을 받는 것이 아니다.",
+                question: "지식으로 아는 것과 체험으로 아는 것의 차이는 무엇일까요? 당신은 어떤 진리를 몸으로 체득했나요?"
+            }
+        ];
 
-  <div class="footer">
-    데미안은 이해하는 책이 아니라,<br>
-    나를 마주보게 하는 책입니다.
-  </div>
-</div>
+        let currentIndex = 0;
+        let userNotes = {};
 
-<script>
-const questions = [
-{
- q:"나는 나 자신으로 살았던 시간이 더 많았을까, 역할로 살았던 시간이 더 많았을까?",
- s:"👉 데미안은 ‘어떤 사람이 될 것인가’보다 ‘어떤 존재로 남을 것인가’를 묻습니다."
-},
-{
- q:"선한 사람으로 보이는 삶과, 진실한 사람으로 사는 삶 중 나는 무엇을 선택해 왔을까?",
- s:"👉 아브락사스는 선과 악 이전의 ‘있는 그대로의 나’를 상징합니다."
-},
-{
- q:"나를 가장 오래 보호해 준 것은 무엇이며, 동시에 무엇을 막아왔을까?",
- s:"👉 알은 안전이지만, 영원한 집은 아닙니다."
-},
-{
- q:"지금의 나는 자유로운가, 아니면 더 이상 증명하지 않아도 되어서 조용해진 것일까?",
- s:"👉 침묵은 자유일 수도, 체념일 수도 있습니다."
-},
-{
- q:"내 인생에서 끝내 이해되지 않는 선택 하나가 있다면, 그것을 나는 아직 붙잡고 있는가?",
- s:"👉 이해되지 않는 것을 내려놓는 것도 하나의 통합입니다."
-},
-{
- q:"오늘의 내가 젊은 시절의 나를 만난다면, 나는 그를 바꾸려 할까, 안아주려 할까?",
- s:"👉 데미안의 성장은 바뀜이 아니라 ‘수용’에 가깝습니다."
-}
-];
+        function displayQuestion(index) {
+            const q = questions[index];
+            const card = document.getElementById('questionCard');
+            
+            const savedNote = userNotes[index] || '';
+            
+            card.innerHTML = `
+                <div class="theme">${q.theme}</div>
+                <div class="quote">"${q.quote}"</div>
+                <div class="question">${q.question}</div>
+                <div class="notes">
+                    <h3 style="color: #f0a500; margin-bottom: 15px;">💭 나의 생각</h3>
+                    <textarea id="noteArea" placeholder="자유롭게 생각을 기록해보세요...">${savedNote}</textarea>
+                </div>
+            `;
 
-function newQuestion(){
- const r = questions[Math.floor(Math.random()*questions.length)];
- document.getElementById("qCard").style.display="block";
- document.getElementById("symbolCard").style.display="block";
- document.getElementById("question").innerText = r.q;
- document.getElementById("symbol").innerText = r.s;
-}
-</script>
+            document.getElementById('noteArea').addEventListener('input', function(e) {
+                userNotes[currentIndex] = e.target.value;
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = ((currentIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = 
+                `질문 ${currentIndex + 1} / ${questions.length}`;
+        }
+
+        function nextQuestion() {
+            currentIndex = (currentIndex + 1) % questions.length;
+            displayQuestion(currentIndex);
+        }
+
+        function previousQuestion() {
+            currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+            displayQuestion(currentIndex);
+        }
+
+        function randomQuestion() {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * questions.length);
+            } while (newIndex === currentIndex && questions.length > 1);
+            currentIndex = newIndex;
+            displayQuestion(currentIndex);
+        }
+
+        displayQuestion(0);
+    </script>
 </body>
 </html>
